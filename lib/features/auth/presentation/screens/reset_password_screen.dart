@@ -1,4 +1,15 @@
-/// Reset password screen (FR-004) — Supabase magic-link email flow.
-///
-/// TODO(Phase 2).
+/// Reset password screen (FR-004) — Phase 1 placeholder.
 library;
+
+import 'package:flutter/material.dart';
+
+class ResetPasswordScreen extends StatelessWidget {
+  const ResetPasswordScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Reset Password (TODO Phase 2)')),
+    );
+  }
+}
