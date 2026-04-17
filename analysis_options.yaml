@@ -1,0 +1,21 @@
+# Static analyzer + lint configuration for e_ticketing_helpdesk.
+# Run via: `flutter analyze` and `dart run custom_lint`.
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "build/**"
+  plugins:
+    - custom_lint
+  language:
+    strict-casts: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    avoid_print: true
