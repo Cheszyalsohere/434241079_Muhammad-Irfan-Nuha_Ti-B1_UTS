@@ -1,27 +1,30 @@
-/// Splash screen — animated logo, 2s min display, auth check, then
-/// redirects to /login or /dashboard via the router.
+/// Splash screen — animated logo, 2s minimum display, then routes to
+/// `/login` or `/dashboard` based on `authStateProvider`.
 ///
-/// Phase 1 placeholder: shows brand mark and waits [AppConstants.splashMinimum]
-/// before pushing the initial destination (handled by the router's
-/// redirect).
+/// We hold for at least [AppConstants.splashMinimum] so the brand mark
+/// is visible even on warm starts where the auth state resolves
+/// immediately.
 library;
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/config/app_constants.dart';
+import '../../../../core/router/app_router.dart';
+import '../../domain/entities/user_entity.dart';
+import '../providers/auth_provider.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -31,11 +34,14 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _bootstrap() async {
     await Future<void>.delayed(AppConstants.splashMinimum);
     if (!mounted) return;
-    final Session? session = Supabase.instance.client.auth.currentSession;
-    if (session == null) {
-      context.go('/login');
+    // `currentUserProvider` resolves to AsyncData(user) after the first
+    // emit from the auth-state stream. Read once, then route.
+    final AsyncValue<UserEntity?> userAsync = ref.read(currentUserProvider);
+    final UserEntity? user = userAsync.valueOrNull;
+    if (user == null) {
+      context.go(AppRoutes.login);
     } else {
-      context.go('/dashboard');
+      context.go(AppRoutes.dashboard);
     }
   }
 
