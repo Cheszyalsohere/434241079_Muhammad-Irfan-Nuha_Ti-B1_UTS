@@ -13,6 +13,12 @@ analyzer:
   language:
     strict-casts: true
     strict-raw-types: true
+  errors:
+    # `freezed` + `json_serializable` emit `@JsonKey` on factory
+    # constructor parameters; analyzer 7.x flags this as
+    # `invalid_annotation_target` even though the generator handles it
+    # correctly. Suppress globally — the warning is noise.
+    invalid_annotation_target: ignore
 
 linter:
   rules:
