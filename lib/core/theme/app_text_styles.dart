@@ -1,64 +1,77 @@
 /// Typography tokens — display, headline, title, body, label variants.
 ///
+/// Typeface is **Plus Jakarta Sans** (served at runtime by
+/// `google_fonts`), chosen for its rounded, modern feel that pairs
+/// cleanly with the glass/gradient aesthetic. We lean a bit heavier on
+/// headlines (`w700`) and tighten letter-spacing on body to keep
+/// readability crisp over the translucent surfaces.
+///
 /// Consumers should read styles from `Theme.of(context).textTheme` in
 /// most cases; this class exists for places where a specific style is
 /// needed without going through the theme lookup.
 library;
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 abstract final class AppTextStyles {
-  static const String fontFamily = 'Roboto';
+  /// Typeface name — kept as a constant for any debug/readme reference.
+  /// Actual styles are produced through `GoogleFonts.plusJakartaSans(...)`.
+  static const String fontFamily = 'Plus Jakarta Sans';
 
-  static const TextStyle displayLarge = TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.w700,
-    height: 1.2,
-  );
+  static TextStyle get displayLarge => GoogleFonts.plusJakartaSans(
+        fontSize: 32,
+        fontWeight: FontWeight.w700,
+        height: 1.2,
+        letterSpacing: -0.5,
+      );
 
-  static const TextStyle headlineMedium = TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.w600,
-    height: 1.3,
-  );
+  static TextStyle get headlineMedium => GoogleFonts.plusJakartaSans(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        height: 1.3,
+        letterSpacing: -0.25,
+      );
 
-  static const TextStyle titleLarge = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.w600,
-    height: 1.3,
-  );
+  static TextStyle get titleLarge => GoogleFonts.plusJakartaSans(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        height: 1.3,
+      );
 
-  static const TextStyle titleMedium = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    height: 1.4,
-  );
+  static TextStyle get titleMedium => GoogleFonts.plusJakartaSans(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        height: 1.4,
+      );
 
-  static const TextStyle bodyLarge = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    height: 1.5,
-  );
+  static TextStyle get bodyLarge => GoogleFonts.plusJakartaSans(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        height: 1.5,
+        letterSpacing: 0.15,
+      );
 
-  static const TextStyle bodyMedium = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    height: 1.5,
-  );
+  static TextStyle get bodyMedium => GoogleFonts.plusJakartaSans(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        height: 1.5,
+        letterSpacing: 0.15,
+      );
 
-  static const TextStyle labelMedium = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-    height: 1.4,
-    letterSpacing: 0.2,
-  );
+  static TextStyle get labelMedium => GoogleFonts.plusJakartaSans(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        height: 1.4,
+        letterSpacing: 0.2,
+      );
 
-  static const TextStyle labelSmall = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w600,
-    height: 1.4,
-    letterSpacing: 0.4,
-  );
+  static TextStyle get labelSmall => GoogleFonts.plusJakartaSans(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        height: 1.4,
+        letterSpacing: 0.4,
+      );
 
   /// Builder that returns a `TextTheme` configured for Material 3,
   /// respecting the surface text color passed in.
