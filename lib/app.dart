@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/gradient_background.dart';
 import 'shared/providers/theme_provider.dart';
 
 class App extends ConsumerStatefulWidget {
@@ -38,6 +39,14 @@ class _AppState extends ConsumerState<App> {
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
       routerConfig: _router,
+      // Paint the mesh gradient once at the app root so every route
+      // (Scaffold is transparent per theme) floats over the same
+      // backdrop. `child` is the router's active page.
+      builder: (BuildContext context, Widget? child) {
+        return GradientBackground(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

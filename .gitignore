@@ -50,3 +50,5 @@ app.*.map.json
 *.freezed.dart
 .vscode/launch.json
 .claude/
+
+.env
