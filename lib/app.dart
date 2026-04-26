@@ -1,5 +1,10 @@
 /// Application root widget — `MaterialApp.router` configured with the
 /// Riverpod-backed theme mode and `go_router` instance.
+///
+/// Also wires the local-notification tap handler with the router so a
+/// heads-up notification tap deep-links into `/tickets/<id>`. The
+/// hookup happens once in `initState` via
+/// [wireNotificationTaps].
 library;
 
 import 'package:flutter/material.dart';
@@ -9,6 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/gradient_background.dart';
+import 'features/notification/presentation/providers/notification_provider.dart';
 import 'shared/providers/theme_provider.dart';
 
 class App extends ConsumerStatefulWidget {
@@ -20,6 +26,19 @@ class App extends ConsumerStatefulWidget {
 
 class _AppState extends ConsumerState<App> {
   late final GoRouter _router = buildRouter();
+
+  @override
+  void initState() {
+    super.initState();
+    // Wire local-notification taps to the router so payloads
+    // (ticket ids) deep-link into the ticket detail screen. Done
+    // once at app start; the service is the same singleton
+    // initialized in `main.dart` (override).
+    wireNotificationTaps(
+      ref.read(localNotificationServiceProvider),
+      _router,
+    );
+  }
 
   @override
   void dispose() {
