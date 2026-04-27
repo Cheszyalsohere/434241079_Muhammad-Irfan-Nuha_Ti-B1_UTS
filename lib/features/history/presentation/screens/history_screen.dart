@@ -21,7 +21,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/app_constants.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/empty_state.dart';
-import '../../../../core/widgets/loading_indicator.dart';
+import '../../../../core/widgets/error_state.dart';
+import '../../../../core/widgets/skeletons/ticket_card_skeleton.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notification/presentation/providers/notification_provider.dart';
@@ -125,10 +126,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             ),
             Expanded(
               child: async.when(
-                loading: () =>
-                    const LoadingIndicator(message: 'Memuat riwayat...'),
-                error: (Object err, _) => _ErrorRetry(
-                  message: err.toString(),
+                loading: () => const TicketListSkeleton(),
+                error: (Object err, _) => ErrorState(
+                  message: 'Gagal memuat riwayat.',
+                  details: err.toString(),
                   onRetry: () =>
                       ref.invalidate(historyControllerProvider),
                 ),
@@ -294,31 +295,3 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
-class _ErrorRetry extends StatelessWidget {
-  const _ErrorRetry({required this.message, required this.onRetry});
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Icon(Icons.error_outline, size: 56),
-            const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Coba lagi'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -19,10 +19,9 @@
 // ignore_for_file: deprecated_member_use
 library;
 
-import 'dart:typed_data';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/app_constants.dart';
@@ -125,6 +124,10 @@ class TicketDetailScreen extends ConsumerWidget {
             .read(ticketDetailControllerProvider(ticket.id).notifier)
             .updateStatus(next);
         if (context.mounted) {
+          if (ok) {
+            // Medium impact for state-changing actions visible to others.
+            HapticFeedback.mediumImpact();
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
