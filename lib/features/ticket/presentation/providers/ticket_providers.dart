@@ -14,6 +14,7 @@ import '../../domain/repositories/ticket_repository.dart';
 import '../../domain/usecases/add_comment_usecase.dart';
 import '../../domain/usecases/assign_ticket_usecase.dart';
 import '../../domain/usecases/create_ticket_usecase.dart';
+import '../../domain/usecases/get_status_history_usecase.dart';
 import '../../domain/usecases/get_ticket_detail_usecase.dart';
 import '../../domain/usecases/get_tickets_usecase.dart';
 import '../../domain/usecases/update_ticket_status_usecase.dart';
@@ -39,6 +40,12 @@ GetTicketDetailUseCase getTicketDetailUseCase(
   GetTicketDetailUseCaseRef ref,
 ) =>
     GetTicketDetailUseCase(ref.watch(ticketRepositoryProvider));
+
+@riverpod
+GetStatusHistoryUseCase getStatusHistoryUseCase(
+  GetStatusHistoryUseCaseRef ref,
+) =>
+    GetStatusHistoryUseCase(ref.watch(ticketRepositoryProvider));
 
 @riverpod
 CreateTicketUseCase createTicketUseCase(CreateTicketUseCaseRef ref) =>

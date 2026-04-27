@@ -41,6 +41,7 @@ import '../providers/ticket_detail_provider.dart';
 import '../providers/ticket_list_provider.dart';
 import '../widgets/comment_bubble.dart';
 import '../widgets/image_picker_sheet.dart';
+import '../widgets/status_timeline.dart';
 
 class TicketDetailScreen extends ConsumerWidget {
   const TicketDetailScreen({required this.ticketId, super.key});
@@ -260,7 +261,11 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
   @override
   Widget build(BuildContext context) {
     final TicketDetail d = widget.detail;
-    final List<_TimelineItem> timeline = _mergeTimeline(d);
+    // Comments are sorted oldest -> newest by the datasource. We
+    // render them as a chat-style activity feed beneath the dedicated
+    // "Timeline Status" expansion above so the two sections don't
+    // duplicate the same status events.
+    final List<CommentEntity> comments = d.comments;
 
     return Column(
       children: <Widget>[
@@ -275,14 +280,34 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
                   _FullWidthAttachment(url: d.ticket.attachmentUrl!),
                 _DescriptionCard(description: d.ticket.description),
                 const SizedBox(height: 8),
-                const _SectionHeader('Timeline'),
-                for (final _TimelineItem item in timeline)
-                  item.comment != null
-                      ? CommentBubble(
-                          comment: item.comment!,
-                          isMine: item.comment!.userId == widget.me?.id,
-                        )
-                      : _StatusEvent(entry: item.history!),
+                _TimelineStatusSection(
+                  ticket: d.ticket,
+                  history: d.history,
+                ),
+                const SizedBox(height: 8),
+                const _SectionHeader('Aktivitas'),
+                if (comments.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      'Belum ada komentar.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
+                          ),
+                    ),
+                  )
+                else
+                  for (final CommentEntity c in comments)
+                    CommentBubble(
+                      comment: c,
+                      isMine: c.userId == widget.me?.id,
+                    ),
                 const SizedBox(height: 80),
               ],
             ),
@@ -302,29 +327,6 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
     );
   }
 
-  List<_TimelineItem> _mergeTimeline(TicketDetail d) {
-    final List<_TimelineItem> items = <_TimelineItem>[
-      for (final StatusHistoryEntry h in d.history)
-        _TimelineItem.fromHistory(h),
-      for (final CommentEntity c in d.comments) _TimelineItem.fromComment(c),
-    ]..sort((a, b) => a.when.compareTo(b.when));
-    return items;
-  }
-}
-
-class _TimelineItem {
-  _TimelineItem.fromComment(CommentEntity c)
-      : comment = c,
-        history = null,
-        when = c.createdAt;
-  _TimelineItem.fromHistory(StatusHistoryEntry h)
-      : comment = null,
-        history = h,
-        when = h.createdAt;
-
-  final CommentEntity? comment;
-  final StatusHistoryEntry? history;
-  final DateTime when;
 }
 
 /// ──────────────────────────────────────────────────────────────────────
@@ -491,6 +493,49 @@ class _DescriptionCard extends StatelessWidget {
   }
 }
 
+/// Collapsible "Timeline Status" section. Open by default so the
+/// status journey is immediately visible, but folds up if the user
+/// just wants the activity feed.
+class _TimelineStatusSection extends StatelessWidget {
+  const _TimelineStatusSection({
+    required this.ticket,
+    required this.history,
+  });
+
+  final TicketEntity ticket;
+  final List<StatusHistoryEntry> history;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        initiallyExpanded: true,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+        title: Text(
+          'Timeline Status',
+          style: theme.textTheme.titleSmall,
+        ),
+        subtitle: Text(
+          history.isEmpty
+              ? 'Belum ada perubahan setelah dibuat'
+              : '${history.length} perubahan',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+        leading: Icon(Icons.timeline, color: theme.colorScheme.primary),
+        children: <Widget>[
+          StatusTimeline(ticket: ticket, history: history),
+        ],
+      ),
+    );
+  }
+}
+
 class _FullWidthAttachment extends StatelessWidget {
   const _FullWidthAttachment({required this.url});
   final String url;
@@ -557,50 +602,6 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         text,
         style: Theme.of(context).textTheme.titleSmall,
-      ),
-    );
-  }
-}
-
-class _StatusEvent extends StatelessWidget {
-  const _StatusEvent({required this.entry});
-  final StatusHistoryEntry entry;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final String who = entry.changedByProfile?.fullName ?? 'Sistem';
-    final String label = entry.oldStatus == null
-        ? 'Tiket dibuat (${entry.newStatus.label}) oleh $who'
-        : 'Status diubah '
-            '${entry.oldStatus!.label} → ${entry.newStatus.label} oleh $who';
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Row(
-        children: <Widget>[
-          Icon(
-            Icons.timeline,
-            size: 16,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            DateFormatter.relative(entry.createdAt),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-            ),
-          ),
-        ],
       ),
     );
   }

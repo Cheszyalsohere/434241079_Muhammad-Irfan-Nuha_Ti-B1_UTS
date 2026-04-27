@@ -465,7 +465,6 @@ class _BottomNav extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final int unread = ref.watch(unreadCountProvider);
     return NavigationBar(
       selectedIndex: currentIndex,
       onDestinationSelected: (int i) {
@@ -475,36 +474,28 @@ class _BottomNav extends ConsumerWidget {
           case 1:
             context.go(AppRoutes.tickets);
           case 2:
-            context.go(AppRoutes.notifications);
+            context.go(AppRoutes.history);
           case 3:
             context.go(AppRoutes.profile);
         }
       },
-      destinations: <NavigationDestination>[
-        const NavigationDestination(
+      destinations: const <NavigationDestination>[
+        NavigationDestination(
           icon: Icon(Icons.dashboard_outlined),
           selectedIcon: Icon(Icons.dashboard),
           label: 'Dashboard',
         ),
-        const NavigationDestination(
+        NavigationDestination(
           icon: Icon(Icons.confirmation_number_outlined),
           selectedIcon: Icon(Icons.confirmation_number),
           label: 'Tiket',
         ),
         NavigationDestination(
-          icon: Badge(
-            isLabelVisible: unread > 0,
-            label: Text(unread > 99 ? '99+' : '$unread'),
-            child: const Icon(Icons.notifications_outlined),
-          ),
-          selectedIcon: Badge(
-            isLabelVisible: unread > 0,
-            label: Text(unread > 99 ? '99+' : '$unread'),
-            child: const Icon(Icons.notifications),
-          ),
-          label: 'Notifikasi',
+          icon: Icon(Icons.history_outlined),
+          selectedIcon: Icon(Icons.history),
+          label: 'Riwayat',
         ),
-        const NavigationDestination(
+        NavigationDestination(
           icon: Icon(Icons.person_outline),
           selectedIcon: Icon(Icons.person),
           label: 'Profil',
