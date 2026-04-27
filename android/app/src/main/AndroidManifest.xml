@@ -2,6 +2,13 @@
     <!-- Android 13+ runtime notification permission (FR-007). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
+    <!-- Avatar capture (Phase 7). image_picker uses the Android system
+         camera intent which technically doesn't require this for the
+         picker itself, but image_cropper writes the result via the
+         camera permission scope on some OEM ROMs. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+
     <application
         android:label="e_ticketing_helpdesk"
         android:name="${applicationName}"
@@ -28,6 +35,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- image_cropper UCrop activity (Phase 7 — avatar crop). -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

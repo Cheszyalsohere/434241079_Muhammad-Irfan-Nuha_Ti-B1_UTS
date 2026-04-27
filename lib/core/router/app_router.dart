@@ -22,6 +22,7 @@ import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/history/presentation/screens/history_screen.dart';
 import '../../features/notification/presentation/screens/notification_screen.dart';
+import '../../features/profile/presentation/screens/change_password_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/ticket/presentation/screens/create_ticket_screen.dart';
 import '../../features/ticket/presentation/screens/ticket_detail_screen.dart';
@@ -40,6 +41,7 @@ abstract final class AppRoutes {
   static const String history = '/history';
   static const String notifications = '/notifications';
   static const String profile = '/profile';
+  static const String changePassword = '/profile/change-password';
 
   static const Set<String> publicPaths = <String>{
     splash,
@@ -133,6 +135,12 @@ GoRouter buildRouter() {
       GoRoute(
         path: AppRoutes.profile,
         builder: (_, __) => const ProfileScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'change-password',
+            builder: (_, __) => const ChangePasswordScreen(),
+          ),
+        ],
       ),
     ],
     errorBuilder: (BuildContext _, GoRouterState state) => Scaffold(
