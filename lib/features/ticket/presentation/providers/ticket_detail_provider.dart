@@ -20,6 +20,7 @@ import '../../../auth/domain/entities/user_entity.dart';
 import '../../domain/entities/comment_entity.dart';
 import '../../domain/entities/ticket_entity.dart';
 import '../../domain/usecases/get_ticket_detail_usecase.dart';
+import '../../domain/usecases/get_status_history_usecase.dart';
 import 'ticket_providers.dart';
 
 part 'ticket_detail_provider.g.dart';
@@ -110,6 +111,26 @@ class TicketDetailController extends _$TicketDetailController {
       },
     );
   }
+}
+
+/// Status-change timeline for a single ticket.
+///
+/// Backed by [GetStatusHistoryUseCase] but lazily refreshed on the
+/// same `ticketId` family — the ticket detail screen renders this
+/// alongside [TicketDetailController]. We keep it as a separate
+/// provider so the timeline can be embedded without forcing a full
+/// detail re-fetch when the parent screen is already paginating data.
+@riverpod
+Future<List<StatusHistoryEntry>> statusHistory(
+  StatusHistoryRef ref,
+  String ticketId,
+) async {
+  final Either<Failure, List<StatusHistoryEntry>> res =
+      await ref.read(getStatusHistoryUseCaseProvider).call(ticketId);
+  return res.fold(
+    (Failure f) => throw f,
+    (List<StatusHistoryEntry> list) => list,
+  );
 }
 
 /// Helpdesk staff list (cached) for the "Tugaskan" dropdown.

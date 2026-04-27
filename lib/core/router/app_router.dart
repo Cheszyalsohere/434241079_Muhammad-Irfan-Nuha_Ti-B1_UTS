@@ -1,7 +1,8 @@
 /// `go_router` configuration with auth-aware redirect.
 ///
 /// Routes: /splash, /login, /register, /reset-password, /dashboard,
-/// /tickets, /tickets/create, /tickets/:id, /notifications, /profile.
+/// /tickets, /tickets/create, /tickets/:id, /history, /notifications,
+/// /profile.
 ///
 /// The router listens to Supabase auth state via a [ChangeNotifier]
 /// adapter so redirects fire whenever the session changes
@@ -19,6 +20,7 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/history/presentation/screens/history_screen.dart';
 import '../../features/notification/presentation/screens/notification_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/ticket/presentation/screens/create_ticket_screen.dart';
@@ -35,6 +37,7 @@ abstract final class AppRoutes {
   static const String tickets = '/tickets';
   static const String ticketCreate = '/tickets/create';
   static const String ticketDetail = '/tickets/:id';
+  static const String history = '/history';
   static const String notifications = '/notifications';
   static const String profile = '/profile';
 
@@ -118,6 +121,10 @@ GoRouter buildRouter() {
                 TicketDetailScreen(ticketId: state.pathParameters['id'] ?? ''),
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.history,
+        builder: (_, __) => const HistoryScreen(),
       ),
       GoRoute(
         path: AppRoutes.notifications,
