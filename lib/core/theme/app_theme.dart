@@ -77,7 +77,7 @@ abstract final class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: false,
+        centerTitle: true,
         titleTextStyle: AppTextStyles.titleLarge.copyWith(color: onSurface),
       ),
 

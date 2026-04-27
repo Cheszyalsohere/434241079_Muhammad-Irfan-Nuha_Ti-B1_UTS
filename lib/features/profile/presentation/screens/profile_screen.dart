@@ -33,6 +33,8 @@ import '../../../../core/config/app_constants.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/error_state.dart';
+import '../../../../core/widgets/skeletons/profile_skeleton.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
@@ -291,9 +293,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object err, _) => _ErrorRetry(
-          message: err is Failure ? err.message : err.toString(),
+        loading: () => const ProfileSkeleton(),
+        error: (Object err, _) => ErrorState(
+          message: 'Gagal memuat profil.',
+          details: err is Failure ? err.message : err.toString(),
           onRetry: () => ref.invalidate(profileControllerProvider),
         ),
         data: (UserEntity? user) {
@@ -669,32 +672,4 @@ class _SignedOut extends StatelessWidget {
   }
 }
 
-class _ErrorRetry extends StatelessWidget {
-  const _ErrorRetry({required this.message, required this.onRetry});
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Icon(Icons.error_outline, size: 56),
-            const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Coba lagi'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 

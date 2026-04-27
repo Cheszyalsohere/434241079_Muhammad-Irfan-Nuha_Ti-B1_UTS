@@ -6,10 +6,9 @@
 /// the new ticket appears at the top and `pop()` back to the list.
 library;
 
-import 'dart:typed_data';
-
 import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -99,6 +98,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
         for (final TicketScope s in TicketScope.values) {
           ref.invalidate(ticketListControllerProvider(s));
         }
+        // Light tactile confirmation that the ticket landed.
+        HapticFeedback.lightImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Tiket ${t.ticketNumber} dibuat.')),
         );

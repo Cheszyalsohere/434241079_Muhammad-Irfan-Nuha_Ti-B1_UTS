@@ -11,7 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/empty_state.dart';
-import '../../../../core/widgets/loading_indicator.dart';
+import '../../../../core/widgets/error_state.dart';
+import '../../../../core/widgets/skeletons/notification_tile_skeleton.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../providers/notification_provider.dart';
 import '../widgets/notification_tile.dart';
@@ -46,10 +47,10 @@ class NotificationScreen extends ConsumerWidget {
           onRefresh: () =>
               ref.read(notificationsControllerProvider.notifier).refresh(),
           child: async.when(
-            loading: () =>
-                const LoadingIndicator(message: 'Memuat notifikasi...'),
-            error: (Object err, _) => _ErrorRetry(
-              message: err.toString(),
+            loading: () => const NotificationListSkeleton(),
+            error: (Object err, _) => ErrorState(
+              message: 'Gagal memuat notifikasi.',
+              details: err.toString(),
               onRetry: () =>
                   ref.invalidate(notificationsControllerProvider),
             ),
@@ -83,31 +84,3 @@ class NotificationScreen extends ConsumerWidget {
   }
 }
 
-class _ErrorRetry extends StatelessWidget {
-  const _ErrorRetry({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(24),
-      children: <Widget>[
-        const SizedBox(height: 80),
-        const Icon(Icons.error_outline, size: 56),
-        const SizedBox(height: 12),
-        Text(message, textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        Center(
-          child: OutlinedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Coba lagi'),
-          ),
-        ),
-      ],
-    );
-  }
-}

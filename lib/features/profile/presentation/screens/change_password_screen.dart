@@ -110,6 +110,7 @@ class _ChangePasswordScreenState
               TextFormField(
                 controller: _currentCtrl,
                 obscureText: _obscureCurrent,
+                textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   labelText: 'Password Saat Ini',
                   prefixIcon: const Icon(Icons.lock_outline),
@@ -132,6 +133,7 @@ class _ChangePasswordScreenState
               TextFormField(
                 controller: _newCtrl,
                 obscureText: _obscureNew,
+                textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   labelText: 'Password Baru',
                   prefixIcon: const Icon(Icons.lock_reset_outlined),
@@ -151,6 +153,8 @@ class _ChangePasswordScreenState
               TextFormField(
                 controller: _confirmCtrl,
                 obscureText: _obscureConfirm,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _submit(),
                 decoration: InputDecoration(
                   labelText: 'Konfirmasi Password Baru',
                   prefixIcon: const Icon(Icons.check_circle_outline),

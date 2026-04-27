@@ -51,6 +51,28 @@ abstract final class AppRoutes {
   };
 }
 
+/// Wraps a route's [child] in a 200ms fade transition. Used as the
+/// uniform `pageBuilder` for every [GoRoute] so route changes feel
+/// consistent across the app.
+CustomTransitionPage<void> _fadePage({
+  required Widget child,
+  LocalKey? key,
+}) {
+  return CustomTransitionPage<void>(
+    key: key,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 200),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
+    transitionsBuilder: (
+      BuildContext _,
+      Animation<double> animation,
+      Animation<double> __,
+      Widget child,
+    ) =>
+        FadeTransition(opacity: animation, child: child),
+  );
+}
+
 /// Adapts `Stream<AuthState>` into a `Listenable` for `go_router`'s
 /// `refreshListenable` so auth changes trigger a redirect re-evaluation.
 class _AuthRefreshNotifier extends ChangeNotifier {
@@ -91,54 +113,73 @@ GoRouter buildRouter() {
     routes: <RouteBase>[
       GoRoute(
         path: AppRoutes.splash,
-        builder: (_, __) => const SplashScreen(),
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const SplashScreen()),
       ),
       GoRoute(
         path: AppRoutes.login,
-        builder: (_, __) => const LoginScreen(),
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const LoginScreen()),
       ),
       GoRoute(
         path: AppRoutes.register,
-        builder: (_, __) => const RegisterScreen(),
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const RegisterScreen()),
       ),
       GoRoute(
         path: AppRoutes.resetPassword,
-        builder: (_, __) => const ResetPasswordScreen(),
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const ResetPasswordScreen()),
       ),
       GoRoute(
         path: AppRoutes.dashboard,
-        builder: (_, __) => const DashboardScreen(),
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const DashboardScreen()),
       ),
       GoRoute(
         path: AppRoutes.tickets,
-        builder: (_, __) => const TicketListScreen(),
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const TicketListScreen()),
         routes: <RouteBase>[
           GoRoute(
             path: 'create',
-            builder: (_, __) => const CreateTicketScreen(),
+            pageBuilder: (_, GoRouterState state) => _fadePage(
+              key: state.pageKey,
+              child: const CreateTicketScreen(),
+            ),
           ),
           GoRoute(
             path: ':id',
-            builder: (BuildContext _, GoRouterState state) =>
-                TicketDetailScreen(ticketId: state.pathParameters['id'] ?? ''),
+            pageBuilder: (_, GoRouterState state) => _fadePage(
+              key: state.pageKey,
+              child: TicketDetailScreen(
+                ticketId: state.pathParameters['id'] ?? '',
+              ),
+            ),
           ),
         ],
       ),
       GoRoute(
         path: AppRoutes.history,
-        builder: (_, __) => const HistoryScreen(),
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const HistoryScreen()),
       ),
       GoRoute(
         path: AppRoutes.notifications,
-        builder: (_, __) => const NotificationScreen(),
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const NotificationScreen()),
       ),
       GoRoute(
         path: AppRoutes.profile,
-        builder: (_, __) => const ProfileScreen(),
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const ProfileScreen()),
         routes: <RouteBase>[
           GoRoute(
             path: 'change-password',
-            builder: (_, __) => const ChangePasswordScreen(),
+            pageBuilder: (_, GoRouterState state) => _fadePage(
+              key: state.pageKey,
+              child: const ChangePasswordScreen(),
+            ),
           ),
         ],
       ),

@@ -14,6 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/gradient_background.dart';
+import 'core/widgets/offline_banner.dart';
 import 'features/notification/presentation/providers/notification_provider.dart';
 import 'shared/providers/theme_provider.dart';
 
@@ -63,7 +64,20 @@ class _AppState extends ConsumerState<App> {
       // backdrop. `child` is the router's active page.
       builder: (BuildContext context, Widget? child) {
         return GradientBackground(
-          child: child ?? const SizedBox.shrink(),
+          child: Stack(
+            children: <Widget>[
+              child ?? const SizedBox.shrink(),
+              // Slim banner pinned to the top — overlays whatever
+              // route is currently active so the offline state is
+              // visible on every screen, not just lists.
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(child: OfflineBanner()),
+              ),
+            ],
+          ),
         );
       },
     );
