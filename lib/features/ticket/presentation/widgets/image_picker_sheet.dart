@@ -10,6 +10,7 @@ library;
 
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -62,27 +63,35 @@ Future<AttachmentResult?> pickAttachment(BuildContext context) async {
 
   // Optional crop — user can skip via the picker's "Done" without
   // changing the crop rect. On failure we fall back to the raw file.
+  // image_cropper has limited / no web support, so we skip cropping
+  // entirely on web and upload the raw picked image.
   CroppedFile? cropped;
-  try {
-    cropped = await ImageCropper().cropImage(
-      sourcePath: raw.path,
-      compressFormat: ImageCompressFormat.jpg,
-      compressQuality: 85,
-      uiSettings: <PlatformUiSettings>[
-        AndroidUiSettings(
-          toolbarTitle: 'Potong Gambar',
-          lockAspectRatio: false,
-          hideBottomControls: false,
-        ),
-        IOSUiSettings(title: 'Potong Gambar'),
-      ],
-    );
-  } catch (_) {
-    cropped = null;
+  if (!kIsWeb) {
+    try {
+      cropped = await ImageCropper().cropImage(
+        sourcePath: raw.path,
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 85,
+        uiSettings: <PlatformUiSettings>[
+          AndroidUiSettings(
+            toolbarTitle: 'Potong Gambar',
+            lockAspectRatio: false,
+            hideBottomControls: false,
+          ),
+          IOSUiSettings(title: 'Potong Gambar'),
+        ],
+      );
+    } catch (_) {
+      cropped = null;
+    }
   }
 
-  final String finalPath = cropped?.path ?? raw.path;
-  final Uint8List bytes = await XFile(finalPath).readAsBytes();
+  // On web, `raw.path` is a blob URL — we read bytes via the XFile
+  // directly rather than re-wrapping with `XFile(path)`, which would
+  // try to construct a file from a non-filesystem path.
+  final Uint8List bytes = cropped != null
+      ? await XFile(cropped.path).readAsBytes()
+      : await raw.readAsBytes();
 
   if (bytes.lengthInBytes > AppConstants.maxAttachmentBytes) {
     throw ValidationException(

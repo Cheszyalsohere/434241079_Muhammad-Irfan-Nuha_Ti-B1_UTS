@@ -37,6 +37,10 @@ class LocalNotificationService {
   bool _initialized = false;
 
   Future<void> init() async {
+    // `flutter_local_notifications` doesn't support web — skip the
+    // entire init and let `_initialized` stay false so subsequent
+    // `show` calls also short-circuit.
+    if (kIsWeb) return;
     if (_initialized) return;
 
     const AndroidInitializationSettings androidInit =
@@ -71,6 +75,10 @@ class LocalNotificationService {
   /// Ask for `POST_NOTIFICATIONS` (Android 13+). Returns `true` if
   /// granted (or not required on older Android versions).
   Future<bool> requestPermission() async {
+    // `permission_handler` doesn't support web — browsers prompt the
+    // user via the standard Notifications API, but we don't fire
+    // local notifications on web at all, so just claim "granted".
+    if (kIsWeb) return true;
     try {
       final PermissionStatus s = await Permission.notification.request();
       return s.isGranted || s.isLimited;
@@ -89,6 +97,9 @@ class LocalNotificationService {
     required String body,
     String? payload,
   }) async {
+    // No-op on web. Realtime updates still flow into the in-app
+    // notification list; we just skip the OS-level toast.
+    if (kIsWeb) return;
     if (!_initialized) {
       await init();
     }

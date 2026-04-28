@@ -18,10 +18,11 @@
 /// already watches for the avatar).
 library;
 
-import 'dart:io';
+import 'dart:io' show File;
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -147,7 +148,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ? ImageSource.camera
         : ImageSource.gallery;
 
-    if (source == ImageSource.camera) {
+    // Camera permission: native only. Browsers handle the camera
+    // prompt themselves via the standard `getUserMedia` flow when
+    // image_picker_for_web triggers the file input, so skip the
+    // explicit `permission_handler` request on web (it isn't
+    // supported there anyway).
+    if (!kIsWeb && source == ImageSource.camera) {
       final PermissionStatus status = await Permission.camera.request();
       if (!mounted) return;
       if (!status.isGranted) {
@@ -165,31 +171,38 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
     if (picked == null || !mounted) return;
 
-    final CroppedFile? cropped = await ImageCropper().cropImage(
-      sourcePath: picked.path,
-      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-      compressFormat: ImageCompressFormat.jpg,
-      compressQuality: 85,
-      uiSettings: <PlatformUiSettings>[
-        AndroidUiSettings(
-          toolbarTitle: 'Crop Foto',
-          toolbarColor: AppColors.primary,
-          toolbarWidgetColor: Colors.white,
-          activeControlsWidgetColor: AppColors.primary,
-          lockAspectRatio: true,
-          hideBottomControls: false,
-          initAspectRatio: CropAspectRatioPreset.square,
-        ),
-        IOSUiSettings(
-          title: 'Crop Foto',
-          aspectRatioLockEnabled: true,
-        ),
-      ],
-    );
-    if (cropped == null || !mounted) return;
-
-    final File file = File(cropped.path);
-    final Uint8List bytes = await file.readAsBytes();
+    // image_cropper has limited / no web support — skip the crop UI
+    // and upload the picked image as-is on web. On native (Android)
+    // we still run the 1:1 crop flow.
+    Uint8List bytes;
+    if (kIsWeb) {
+      bytes = await picked.readAsBytes();
+    } else {
+      final CroppedFile? cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 85,
+        uiSettings: <PlatformUiSettings>[
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Foto',
+            toolbarColor: AppColors.primary,
+            toolbarWidgetColor: Colors.white,
+            activeControlsWidgetColor: AppColors.primary,
+            lockAspectRatio: true,
+            hideBottomControls: false,
+            initAspectRatio: CropAspectRatioPreset.square,
+          ),
+          IOSUiSettings(
+            title: 'Crop Foto',
+            aspectRatioLockEnabled: true,
+          ),
+        ],
+      );
+      if (cropped == null || !mounted) return;
+      final File file = File(cropped.path);
+      bytes = await file.readAsBytes();
+    }
     if (!mounted) return;
 
     ref.read(isUploadingAvatarProvider.notifier).set(true);
