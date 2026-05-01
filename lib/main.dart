@@ -14,6 +14,7 @@
 /// `keepAlive` flag keeps it subscribed for the rest of the session.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,6 +34,31 @@ final LocalNotificationService localNotifications = LocalNotificationService();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Phase A diagnostics — debug-only global error surfacing. Anything
+  // that would otherwise be silently swallowed (e.g. a provider
+  // exception that blanks the widget tree) now lands in the dev-server
+  // console with full stack. Remove or gate behind a flag once the
+  // root cause is identified.
+  if (kDebugMode) {
+    final FlutterExceptionHandler? prevFlutterOnError = FlutterError.onError;
+    FlutterError.onError = (FlutterErrorDetails details) {
+      prevFlutterOnError?.call(details);
+      debugPrint('═══ FlutterError.onError ═══');
+      debugPrint('Exception: ${details.exception}');
+      debugPrint('Library  : ${details.library}');
+      debugPrint('Context  : ${details.context}');
+      debugPrint('Stack    :\n${details.stack}');
+      debugPrint('═══════════════════════════');
+    };
+    PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+      debugPrint('═══ PlatformDispatcher.onError ═══');
+      debugPrint('Error: $error');
+      debugPrint('Stack:\n$stack');
+      debugPrint('═════════════════════════════════');
+      return true; // marked handled so the zone doesn't crash
+    };
+  }
 
   await dotenv.load();
   await DateFormatter.init();

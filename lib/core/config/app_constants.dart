@@ -28,6 +28,11 @@ abstract final class AppConstants {
   // ── SharedPreferences keys ─────────────────────────────────────────
   static const String prefThemeMode = 'pref.theme_mode';
   static const String prefOnboardingSeen = 'pref.onboarding_seen';
+  static const String prefPushNotifications = 'pref.push_notifications';
+
+  // ── App metadata ───────────────────────────────────────────────────
+  static const String appName = 'E-Ticketing Helpdesk';
+  static const String appVersion = '1.0.0';
 
   // ── Enumerated values (must match DB check constraints) ────────────
   static const List<String> ticketStatuses = <String>[

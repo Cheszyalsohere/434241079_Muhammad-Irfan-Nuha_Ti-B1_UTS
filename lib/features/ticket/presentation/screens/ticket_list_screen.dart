@@ -23,6 +23,8 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/skeletons/ticket_card_skeleton.dart';
+import '../../../../shared/widgets/app_menu_button.dart';
+import '../../../../shared/widgets/theme_toggle_button.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/ticket_entity.dart';
@@ -38,6 +40,11 @@ class TicketListScreen extends ConsumerWidget {
     final AsyncValue<UserEntity?> userAsync = ref.watch(currentUserProvider);
     final UserEntity? user = userAsync.valueOrNull;
     final bool staff = user?.role.canManageAllTickets ?? false;
+    // Both regular users AND admins can create tickets; helpdesk
+    // doesn't (they only handle existing tickets).
+    final UserRole role = user?.role ?? UserRole.user;
+    final bool canCreateTickets =
+        role == UserRole.user || role == UserRole.admin;
 
     final List<TicketScope> scopes = staff
         ? const <TicketScope>[
@@ -60,6 +67,10 @@ class TicketListScreen extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Tiket'),
+          actions: const <Widget>[
+            ThemeToggleButton(),
+            AppMenuButton(),
+          ],
           bottom: tabs.length > 1
               ? TabBar(tabs: tabs)
               : const PreferredSize(
@@ -73,11 +84,13 @@ class TicketListScreen extends ConsumerWidget {
               _ScopeTab(scope: scope, key: ValueKey<TicketScope>(scope)),
           ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => context.push(AppRoutes.ticketCreate),
-          icon: const Icon(Icons.add),
-          label: const Text('Tiket Baru'),
-        ),
+        floatingActionButton: canCreateTickets
+            ? FloatingActionButton.extended(
+                onPressed: () => context.push(AppRoutes.ticketCreate),
+                icon: const Icon(Icons.add),
+                label: const Text('Tiket Baru'),
+              )
+            : null,
       ),
     );
   }
@@ -170,7 +183,15 @@ class _ScopeTabState extends ConsumerState<_ScopeTab> {
             ),
             data: (TicketListState s) {
               if (s.tickets.isEmpty) {
-                final bool showCreateCta = widget.scope == TicketScope.mine &&
+                final UserRole r = ref
+                        .watch(currentUserProvider)
+                        .valueOrNull
+                        ?.role ??
+                    UserRole.user;
+                final bool canCreate =
+                    r == UserRole.user || r == UserRole.admin;
+                final bool showCreateCta = canCreate &&
+                    widget.scope == TicketScope.mine &&
                     s.search.isEmpty;
                 return RefreshIndicator(
                   onRefresh: () => ref

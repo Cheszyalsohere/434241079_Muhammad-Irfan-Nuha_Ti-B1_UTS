@@ -24,6 +24,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass_container.dart';
+import '../../../../shared/widgets/app_menu_button.dart';
+import '../../../../shared/widgets/theme_toggle_button.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notification/presentation/providers/notification_provider.dart';
@@ -43,13 +45,18 @@ class DashboardScreen extends ConsumerWidget {
     final AsyncValue<DashboardStats> async =
         ref.watch(dashboardControllerProvider);
     final UserEntity? user = ref.watch(currentUserProvider).valueOrNull;
-    final bool isUserRole = user?.role.isUser ?? true;
+    final UserRole role = user?.role ?? UserRole.user;
+    // Both regular users AND admins can create tickets. Helpdesk
+    // staff don't — they handle existing tickets, not raise new ones.
+    final bool canCreateTickets =
+        role == UserRole.user || role == UserRole.admin;
     final int unread = ref.watch(unreadCountProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: <Widget>[
+          const ThemeToggleButton(),
           IconButton(
             tooltip: 'Notifikasi',
             icon: Badge(
@@ -64,6 +71,7 @@ class DashboardScreen extends ConsumerWidget {
             icon: const Icon(Icons.person_outline),
             onPressed: () => context.push(AppRoutes.profile),
           ),
+          const AppMenuButton(),
         ],
       ),
       body: SafeArea(
@@ -84,7 +92,7 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: isUserRole
+      floatingActionButton: canCreateTickets
           ? FloatingActionButton.extended(
               onPressed: () => context.push(AppRoutes.ticketCreate),
               icon: const Icon(Icons.add),
