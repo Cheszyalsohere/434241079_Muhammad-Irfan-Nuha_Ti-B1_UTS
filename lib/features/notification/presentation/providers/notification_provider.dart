@@ -20,6 +20,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../shared/providers/notif_enabled_provider.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/datasources/notification_remote_datasource.dart';
@@ -124,10 +125,15 @@ class NotificationsController extends _$NotificationsController {
         .listen(
       (List<NotificationEntity> list) {
         // Detect newly arrived rows and push for any that are unread.
+        // Skip the OS-level toast when the user has turned push
+        // notifications off in Settings — the in-app list still
+        // updates from `state = AsyncData(...)` below.
+        final bool pushEnabled =
+            ref.read(notifEnabledProvider).valueOrNull ?? true;
         for (final NotificationEntity n in list) {
           if (!seenIds.contains(n.id)) {
             seenIds.add(n.id);
-            if (!n.isRead) {
+            if (!n.isRead && pushEnabled) {
               ref.read(localNotificationServiceProvider).show(
                     id: pushId++,
                     title: n.title,

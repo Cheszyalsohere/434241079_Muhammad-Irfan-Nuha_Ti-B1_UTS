@@ -23,6 +23,8 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/skeletons/ticket_card_skeleton.dart';
+import '../../../../shared/widgets/app_menu_button.dart';
+import '../../../../shared/widgets/theme_toggle_button.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notification/presentation/providers/notification_provider.dart';
@@ -87,6 +89,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       appBar: AppBar(
         title: const Text('Riwayat Tiket'),
         actions: <Widget>[
+          const ThemeToggleButton(),
           IconButton(
             tooltip: _searchOpen ? 'Tutup pencarian' : 'Cari',
             onPressed: () {
@@ -107,6 +110,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             ),
             onPressed: () => context.push(AppRoutes.notifications),
           ),
+          const AppMenuButton(),
         ],
       ),
       body: SafeArea(

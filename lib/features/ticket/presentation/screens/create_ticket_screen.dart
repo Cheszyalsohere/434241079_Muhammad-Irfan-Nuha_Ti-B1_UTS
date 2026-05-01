@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
@@ -112,7 +113,24 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Tiket Baru')),
+      appBar: AppBar(
+        title: const Text('Tiket Baru'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _submitting
+              ? null
+              : () {
+                  // canPop covers the normal in-app push; the fallback
+                  // catches direct URL navigation on web where there's
+                  // no prior route to return to.
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(AppRoutes.dashboard);
+                  }
+                },
+        ),
+      ),
       body: SafeArea(
         child: Form(
           key: _formKey,

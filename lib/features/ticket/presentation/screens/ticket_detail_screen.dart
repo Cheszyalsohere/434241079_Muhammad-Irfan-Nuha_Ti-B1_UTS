@@ -23,9 +23,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/loading_indicator.dart';
@@ -56,6 +58,20 @@ class TicketDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Prefer the navigation stack when there's something to
+            // pop; on web (or after a deep link) the user may have
+            // landed here directly, in which case fall back to the
+            // dashboard so they're never stuck.
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.dashboard);
+            }
+          },
+        ),
         title: async.when(
           data: (TicketDetail d) => Text(d.ticket.ticketNumber),
           loading: () => const Text('Memuat...'),

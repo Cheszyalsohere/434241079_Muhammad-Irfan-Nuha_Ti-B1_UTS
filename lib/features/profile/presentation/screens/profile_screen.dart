@@ -1,4 +1,4 @@
-/// Profile screen (Phase 7 — polish).
+/// Profile / Settings screen (Phase 7 — polish).
 ///
 /// Sections (top → bottom):
 ///   • Header card: avatar (with camera-icon overlay button) + display
@@ -6,9 +6,13 @@
 ///   • Edit-mode form (full name, username) — toggled by the AppBar
 ///     edit / save / cancel actions
 ///   • Info ListTile rows: full name, username, role, email
-///   • Theme toggle
-///   • "Ganti Password" tile → /profile/change-password
+///   • NOTIFIKASI: push notification toggle (persisted to prefs)
+///   • AKUN: Edit Profil + Ganti Password tiles
+///   • TENTANG: Tentang Aplikasi (showAboutDialog) + Versi Aplikasi
 ///   • Logout tile (red) with confirmation dialog
+///
+/// The dark-mode toggle that used to live here moved to the bottom
+/// navigation bar so users can flip themes from any tab.
 ///
 /// Avatar flow: tap the camera button → pick source → image_picker →
 /// image_cropper (1:1) → upload to Supabase Storage at
@@ -29,6 +33,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/config/app_constants.dart';
 import '../../../../core/errors/failures.dart';
@@ -36,11 +41,12 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/skeletons/profile_skeleton.dart';
+import '../../../../shared/widgets/app_menu_button.dart';
+import '../../../../shared/widgets/theme_toggle_button.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/avatar_picker_bottom_sheet.dart';
-import '../widgets/theme_toggle.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -277,6 +283,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       appBar: AppBar(
         title: const Text('Profil'),
         actions: <Widget>[
+          const ThemeToggleButton(),
           if (async.valueOrNull != null)
             if (isEditing) ...<Widget>[
               IconButton(
@@ -303,6 +310,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onPressed: () =>
                     ref.read(isEditingProfileProvider.notifier).enter(),
               ),
+          // Logout already lives as a dedicated red tile at the bottom
+          // of this screen, so the dropdown here intentionally hides
+          // the duplicate "Keluar" menu entry.
+          const AppMenuButton(showLogout: false),
         ],
       ),
       body: async.when(
@@ -336,21 +347,54 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 else
                   _InfoCard(user: user),
                 const SizedBox(height: 24),
-                const _SectionHeader('Tampilan'),
-                const SizedBox(height: 8),
-                const ThemeToggle(),
+                const _SectionHeader('Notifikasi'),
+                const _PushNotificationToggle(),
                 const SizedBox(height: 24),
-                const _SectionHeader('Keamanan'),
+                const _SectionHeader('Akun'),
                 Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.lock_reset_outlined),
-                    title: const Text('Ganti Password'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push(AppRoutes.changePassword),
+                  child: Column(
+                    children: <Widget>[
+                      ListTile(
+                        leading: const Icon(Icons.edit_outlined),
+                        title: const Text('Edit Profil'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: isEditing
+                            ? null
+                            : () => ref
+                                .read(isEditingProfileProvider.notifier)
+                                .enter(),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.lock_reset_outlined),
+                        title: const Text('Ganti Password'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push(AppRoutes.changePassword),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
-                const _SectionHeader('Akun'),
+                const _SectionHeader('Tentang'),
+                Card(
+                  child: Column(
+                    children: <Widget>[
+                      ListTile(
+                        leading: const Icon(Icons.info_outline),
+                        title: const Text('Tentang Aplikasi'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => _showAboutDialog(context),
+                      ),
+                      const Divider(height: 1),
+                      const ListTile(
+                        leading: Icon(Icons.tag_outlined),
+                        title: Text('Versi Aplikasi'),
+                        subtitle: Text(AppConstants.appVersion),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
                 Card(
                   color: Theme.of(context).colorScheme.errorContainer
                       .withValues(alpha: 0.35),
@@ -386,6 +430,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           );
         },
       ),
+    );
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    showAboutDialog(
+      context: context,
+      applicationName: AppConstants.appName,
+      applicationVersion: 'v${AppConstants.appVersion}',
+      applicationIcon: Icon(
+        Icons.confirmation_num_outlined,
+        size: 40,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      applicationLegalese:
+          '© 2026 D4 Teknik Informatika — Universitas Airlangga',
+      children: const <Widget>[
+        SizedBox(height: 12),
+        Text(
+          'Aplikasi helpdesk untuk pengelolaan tiket bantuan teknis: '
+          'pengguna dapat membuat tiket, helpdesk menugaskan dan '
+          'menyelesaikan, admin memantau seluruh sistem.',
+        ),
+      ],
     );
   }
 }
@@ -651,6 +718,60 @@ class _EditForm extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Push notification toggle ─────────────────────────────────────────
+
+/// SwitchListTile that persists the "show push notifications" pref.
+/// The actual gating happens wherever local notifications are shown;
+/// this widget only owns the UI + storage of the user's choice.
+class _PushNotificationToggle extends StatefulWidget {
+  const _PushNotificationToggle();
+
+  @override
+  State<_PushNotificationToggle> createState() =>
+      _PushNotificationToggleState();
+}
+
+class _PushNotificationToggleState extends State<_PushNotificationToggle> {
+  bool _enabled = true;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _enabled = prefs.getBool(AppConstants.prefPushNotifications) ?? true;
+      _loading = false;
+    });
+  }
+
+  Future<void> _setValue(bool v) async {
+    setState(() => _enabled = v);
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefPushNotifications, v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: SwitchListTile(
+        secondary: const Icon(Icons.notifications_active_outlined),
+        title: const Text('Push Notification'),
+        subtitle: const Text(
+          'Tampilkan notifikasi untuk tiket dan komentar baru',
+        ),
+        value: _loading ? false : _enabled,
+        onChanged: _loading ? null : _setValue,
       ),
     );
   }

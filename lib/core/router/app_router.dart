@@ -2,7 +2,7 @@
 ///
 /// Routes: /splash, /login, /register, /reset-password, /dashboard,
 /// /tickets, /tickets/create, /tickets/:id, /history, /notifications,
-/// /profile.
+/// /profile, /profile/change-password, /settings.
 ///
 /// The router listens to Supabase auth state via a [ChangeNotifier]
 /// adapter so redirects fire whenever the session changes
@@ -24,6 +24,7 @@ import '../../features/history/presentation/screens/history_screen.dart';
 import '../../features/notification/presentation/screens/notification_screen.dart';
 import '../../features/profile/presentation/screens/change_password_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/ticket/presentation/screens/create_ticket_screen.dart';
 import '../../features/ticket/presentation/screens/ticket_detail_screen.dart';
 import '../../features/ticket/presentation/screens/ticket_list_screen.dart';
@@ -42,6 +43,7 @@ abstract final class AppRoutes {
   static const String notifications = '/notifications';
   static const String profile = '/profile';
   static const String changePassword = '/profile/change-password';
+  static const String settings = '/settings';
 
   static const Set<String> publicPaths = <String>{
     splash,
@@ -182,6 +184,11 @@ GoRouter buildRouter() {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const SettingsScreen()),
       ),
     ],
     errorBuilder: (BuildContext _, GoRouterState state) => Scaffold(

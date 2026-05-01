@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/app_constants.dart';
+import '../../../../core/router/app_router.dart';
 import '../providers/profile_provider.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
@@ -92,7 +93,24 @@ class _ChangePasswordScreenState
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Ganti Password')),
+      appBar: AppBar(
+        title: const Text('Ganti Password'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _busy
+              ? null
+              : () {
+                  // canPop covers the normal in-app push; the fallback
+                  // catches direct URL navigation on web where there's
+                  // no prior route to return to.
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(AppRoutes.dashboard);
+                  }
+                },
+        ),
+      ),
       body: SafeArea(
         child: Form(
           key: _formKey,
