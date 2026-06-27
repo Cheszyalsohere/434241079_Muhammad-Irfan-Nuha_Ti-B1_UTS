@@ -139,21 +139,15 @@ class _TimelineRow extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  width: 14,
-                  height: 14,
+                  width: 13,
+                  height: 13,
                   decoration: BoxDecoration(
                     color: color,
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(4),
                     border: Border.all(
                       color: theme.colorScheme.surface,
                       width: 2,
                     ),
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.30),
-                        blurRadius: 6,
-                      ),
-                    ],
                   ),
                 ),
                 Expanded(

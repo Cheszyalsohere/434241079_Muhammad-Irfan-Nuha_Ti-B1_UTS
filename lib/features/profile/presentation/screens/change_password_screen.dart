@@ -16,6 +16,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/app_constants.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/widgets/responsive_center.dart';
 import '../providers/profile_provider.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
@@ -115,7 +116,8 @@ class _ChangePasswordScreenState
         child: Form(
           key: _formKey,
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          child: ListView(
+          child: ResponsiveCenter(
+            child: ListView(
             padding: const EdgeInsets.all(16),
             children: <Widget>[
               Text(
@@ -203,6 +205,7 @@ class _ChangePasswordScreenState
                 label: Text(_busy ? 'Menyimpan...' : 'Simpan'),
               ),
             ],
+          ),
           ),
         ),
       ),

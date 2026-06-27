@@ -18,6 +18,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/app_constants.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/responsive_center.dart';
 import '../../../../shared/providers/notif_enabled_provider.dart';
 import '../../../../shared/providers/theme_provider.dart';
 import '../../../../shared/widgets/about_app_dialog.dart';
@@ -46,21 +48,23 @@ class SettingsScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          children: const <Widget>[
-            _SectionHeader('Tampilan'),
-            _AppearanceCard(),
-            SizedBox(height: 24),
-            _SectionHeader('Notifikasi'),
-            _NotificationCard(),
-            SizedBox(height: 24),
-            _SectionHeader('Akun'),
-            _AccountCard(),
-            SizedBox(height: 24),
-            _SectionHeader('Tentang'),
-            _AboutCard(),
-          ],
+        child: ResponsiveCenter(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: const <Widget>[
+              _SectionHeader('Tampilan'),
+              _AppearanceCard(),
+              SizedBox(height: 24),
+              _SectionHeader('Notifikasi'),
+              _NotificationCard(),
+              SizedBox(height: 24),
+              _SectionHeader('Akun'),
+              _AccountCard(),
+              SizedBox(height: 24),
+              _SectionHeader('Tentang'),
+              _AboutCard(),
+            ],
+          ),
         ),
       ),
     );
@@ -217,15 +221,12 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+      padding: const EdgeInsets.fromLTRB(2, 8, 0, 10),
       child: Text(
         text.toUpperCase(),
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.6,
+        style: AppTextStyles.eyebrow.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
         ),
       ),
     );

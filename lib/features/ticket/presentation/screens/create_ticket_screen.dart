@@ -19,6 +19,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
+import '../../../../core/widgets/responsive_center.dart';
 import '../../domain/entities/ticket_entity.dart';
 import '../../domain/repositories/ticket_repository.dart';
 import '../providers/ticket_list_provider.dart';
@@ -134,7 +135,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: ResponsiveCenter(
+            child: ListView(
             padding: const EdgeInsets.all(16),
             children: <Widget>[
               CustomTextField(
@@ -215,6 +217,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
               ),
               const SizedBox(height: 24),
             ],
+          ),
           ),
         ),
       ),

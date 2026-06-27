@@ -1,18 +1,16 @@
-/// Single KPI card — count + label + tinted icon chip + optional
-/// subtitle (e.g. "rata-rata jam" for avg-resolution).
+/// Single KPI card — large mono value + label, with a thin coloured
+/// accent rule on the left edge for at-a-glance status coding.
 ///
-/// Built on top of [GlassContainer] so it inherits the frosted look
-/// of the rest of the surface system. Tapping is optional — when
-/// [onTap] is set, the card forwards taps via a `Material + InkWell`
-/// painted above the blur, the same pattern [GlassCard] uses.
+/// Minimal-clean: solid surface, hairline border, no blur. The number is
+/// set in JetBrains Mono (the app's "data" voice); the accent colour is
+/// reserved for a slim left bar + tiny dot rather than a filled icon
+/// chip, keeping the card quiet.
 library;
-
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/glass_container.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class KpiCard extends StatelessWidget {
   const KpiCard({
@@ -25,14 +23,8 @@ class KpiCard extends StatelessWidget {
     this.onTap,
   });
 
-  /// The big-number string. Strings (not int) so callers can format
-  /// — `"3"`, `"12"`, `"4.5 jam"`, `"99+"` are all valid.
   final String value;
-
-  /// Caption under the number.
   final String label;
-
-  /// Optional secondary line below [label] (smaller, muted).
   final String? subtitle;
   final IconData icon;
   final Color accent;
@@ -41,50 +33,80 @@ class KpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final BorderRadius radius = BorderRadius.circular(20);
     final bool dark = theme.brightness == Brightness.dark;
+    final BorderRadius radius = BorderRadius.circular(12);
+    final Color fill =
+        dark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final Color stroke =
+        dark ? AppColors.borderDark : AppColors.borderLight;
 
     final Widget content = Padding(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(15, 14, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          // Tinted icon chip — gives each card an immediate hue cue.
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 20, color: accent),
+          // Header row: icon (muted) + tappable affordance.
+          Row(
+            children: <Widget>[
+              Icon(
+                icon,
+                size: 17,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+              const Spacer(),
+              if (onTap != null)
+                Icon(
+                  Icons.arrow_outward,
+                  size: 14,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+          // The number — big, mono, tight.
           Text(
             value,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            style: AppTextStyles.monoLarge.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontSize: value.length > 4 ? 24 : 30,
             ),
           ),
+          const SizedBox(height: 6),
+          // Accent dot + label.
+          Row(
+            children: <Widget>[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                  ),
+                ),
+              ),
+            ],
+          ),
           if (subtitle != null) ...<Widget>[
-            const SizedBox(height: 4),
-            Text(
-              subtitle!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+            const SizedBox(height: 3),
+            Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Text(
+                subtitle!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                ),
               ),
             ),
           ],
@@ -92,38 +114,40 @@ class KpiCard extends StatelessWidget {
       ),
     );
 
-    // Tappable variant: ink ripple painted above the backdrop blur.
-    if (onTap != null) {
-      return ClipRRect(
+    // Left accent rule painted via a clipped border layer.
+    final Widget card = DecoratedBox(
+      decoration: BoxDecoration(
+        color: fill,
         borderRadius: radius,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Material(
-            color: dark
-                ? AppColors.glassSurfaceDark
-                : AppColors.glassSurfaceLight,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: radius,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: radius,
-                  border: Border.all(
-                    color: dark
-                        ? AppColors.glassBorderDark
-                        : AppColors.glassBorderLight,
-                    width: 1,
-                  ),
-                ),
-                child: content,
-              ),
+        border: Border.all(color: stroke),
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Stack(
+          children: <Widget>[
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(width: 3, color: accent.withValues(alpha: 0.85)),
             ),
-          ),
+            content,
+          ],
+        ),
+      ),
+    );
+
+    if (onTap != null) {
+      return Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: card,
         ),
       );
     }
-
-    // Static variant — plain glass surface.
-    return GlassContainer(child: content);
+    return card;
   }
 }

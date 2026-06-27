@@ -28,9 +28,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/loading_indicator.dart';
+import '../../../../core/widgets/responsive_center.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -291,7 +293,8 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
         Expanded(
           child: RefreshIndicator(
             onRefresh: widget.onRefresh,
-            child: ListView(
+            child: ResponsiveCenter(
+              child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: <Widget>[
                 _HeaderCard(ticket: d.ticket),
@@ -329,6 +332,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
                     ),
                 const SizedBox(height: 80),
               ],
+            ),
             ),
           ),
         ),
@@ -368,13 +372,13 @@ class _HeaderCard extends StatelessWidget {
           children: <Widget>[
             Text(
               ticket.ticketNumber,
-              style: theme.textTheme.labelMedium?.copyWith(
+              style: AppTextStyles.monoSmall.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(ticket.title, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 6),
+            Text(ticket.title, style: theme.textTheme.titleLarge),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -617,10 +621,12 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
       child: Text(
-        text,
-        style: Theme.of(context).textTheme.titleSmall,
+        text.toUpperCase(),
+        style: AppTextStyles.eyebrow.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
       ),
     );
   }
@@ -660,7 +666,8 @@ class _Composer extends StatelessWidget {
           ),
         ),
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-        child: Column(
+        child: ResponsiveCenter(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             if (attachment != null)
@@ -709,6 +716,7 @@ class _Composer extends StatelessWidget {
               ],
             ),
           ],
+        ),
         ),
       ),
     );

@@ -22,6 +22,7 @@ import '../../../../core/config/app_constants.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
+import '../../../../core/widgets/responsive_center.dart';
 import '../../../../core/widgets/skeletons/ticket_card_skeleton.dart';
 import '../../../../shared/widgets/app_menu_button.dart';
 import '../../../../shared/widgets/theme_toggle_button.dart';
@@ -129,6 +130,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               },
             ),
             Expanded(
+              child: ResponsiveCenter(
               child: async.when(
                 loading: () => const TicketListSkeleton(),
                 error: (Object err, _) => ErrorState(
@@ -190,6 +192,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     ),
                   );
                 },
+              ),
               ),
             ),
           ],

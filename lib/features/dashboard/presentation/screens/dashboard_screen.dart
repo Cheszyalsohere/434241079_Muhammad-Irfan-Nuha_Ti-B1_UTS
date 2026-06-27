@@ -22,8 +22,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/glass_container.dart';
+import '../../../../core/widgets/responsive_center.dart';
 import '../../../../shared/widgets/app_menu_button.dart';
 import '../../../../shared/widgets/theme_toggle_button.dart';
 import '../../../auth/domain/entities/user_entity.dart';
@@ -32,9 +33,9 @@ import '../../../notification/presentation/providers/notification_provider.dart'
 import '../../domain/entities/dashboard_stats_entity.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/dashboard_skeleton.dart';
-import '../widgets/kpi_card.dart';
 import '../widgets/stat_bar_chart.dart';
 import '../widgets/stat_line_chart.dart';
+import '../widgets/stat_overview.dart';
 import '../widgets/stat_pie_chart.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -117,40 +118,46 @@ class _DashboardBody extends StatelessWidget {
     final UserRole role = user?.role ?? UserRole.user;
     final bool showOpsCharts = role.canManageAllTickets;
 
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-      children: <Widget>[
-        _Greeting(user: user),
-        const SizedBox(height: 16),
-
-        // KPI grid — content varies by role.
-        _RoleKpiGrid(role: role, stats: stats),
-        const SizedBox(height: 16),
-
-        // Status distribution — every role gets the pie.
-        _Section(
-          title: 'Distribusi Status',
-          child: StatPieChart(stats: stats),
-        ),
-
-        // Operational charts (helpdesk + admin only). The basic user
-        // doesn't need a per-category breakdown of just their own
-        // handful of tickets.
-        if (showOpsCharts) ...<Widget>[
+    return ResponsiveCenter(
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+        children: <Widget>[
+          _Greeting(user: user),
           const SizedBox(height: 16),
-          _Section(
-            title: 'Tiket per Kategori',
-            child: StatBarChart(stats: stats),
+
+          // Headline hero + dense status breakdown — varies by role.
+          StatOverview(
+            role: role,
+            stats: stats,
+            onTapHeadline: () => context.push(AppRoutes.tickets),
           ),
           const SizedBox(height: 16),
+
+          // Status distribution — every role gets the pie.
           _Section(
-            title: 'Tren 7 Hari Terakhir',
-            subtitle: 'Tiket baru per hari',
-            child: StatLineChart(stats: stats),
+            title: 'Distribusi Status',
+            child: StatPieChart(stats: stats),
           ),
+
+          // Operational charts (helpdesk + admin only). The basic user
+          // doesn't need a per-category breakdown of just their own
+          // handful of tickets.
+          if (showOpsCharts) ...<Widget>[
+            const SizedBox(height: 16),
+            _Section(
+              title: 'Tiket per Kategori',
+              child: StatBarChart(stats: stats),
+            ),
+            const SizedBox(height: 16),
+            _Section(
+              title: 'Tren 7 Hari Terakhir',
+              subtitle: 'Tiket baru per hari',
+              child: StatLineChart(stats: stats),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -174,17 +181,20 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(title, style: theme.textTheme.titleMedium),
+          Text(
+            title,
+            style: theme.textTheme.titleLarge?.copyWith(fontSize: 16),
+          ),
           if (subtitle != null) ...<Widget>[
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
               subtitle!,
               style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           child,
         ],
       ),
@@ -214,223 +224,89 @@ class _Greeting extends StatelessWidget {
     };
 
     return GlassContainer(
-      padding: const EdgeInsets.all(16),
-      child: Row(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.18),
-            backgroundImage: user?.avatarUrl != null
-                ? NetworkImage(user!.avatarUrl!)
-                : null,
-            child: user?.avatarUrl == null
-                ? Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  'Halo, $name',
-                  style: theme.textTheme.titleLarge,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+          // Eyebrow + role chip on one line.
+          Row(
+            children: <Widget>[
+              Text(
+                'RINGKASAN',
+                style: AppTextStyles.eyebrow.copyWith(
+                  color: theme.colorScheme.primary,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  summaryLine,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              roleLabel,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
               ),
-            ),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.10),
+                  ),
+                ),
+                child: Text(
+                  roleLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: <Widget>[
+              CircleAvatar(
+                radius: 22,
+                backgroundColor:
+                    theme.colorScheme.primary.withValues(alpha: 0.14),
+                backgroundImage: user?.avatarUrl != null
+                    ? NetworkImage(user!.avatarUrl!)
+                    : null,
+                child: user?.avatarUrl == null
+                    ? Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Halo, $name',
+                      style: theme.textTheme.titleLarge,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      summaryLine,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
-  }
-}
-
-// ── Role-specific KPI grid ────────────────────────────────────────────
-
-class _RoleKpiGrid extends StatelessWidget {
-  const _RoleKpiGrid({required this.role, required this.stats});
-
-  final UserRole role;
-  final DashboardStats stats;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final Color primary = theme.colorScheme.primary;
-
-    // Build the list of cards declaratively per role; render in a
-    // 2-per-row grid below.
-    final List<Widget> cards = switch (role) {
-      UserRole.user => <Widget>[
-          KpiCard(
-            label: 'Tiket Saya',
-            value: '${stats.total}',
-            icon: Icons.confirmation_number_outlined,
-            accent: primary,
-            onTap: () => context.push(AppRoutes.tickets),
-          ),
-          KpiCard(
-            label: 'Terbuka',
-            value: '${stats.open}',
-            icon: Icons.error_outline,
-            accent: AppColors.statusOpen,
-          ),
-          KpiCard(
-            label: 'Diproses',
-            value: '${stats.inProgress}',
-            icon: Icons.timelapse_outlined,
-            accent: AppColors.statusInProgress,
-          ),
-          KpiCard(
-            label: 'Selesai',
-            value: '${stats.resolved}',
-            icon: Icons.check_circle_outline,
-            accent: AppColors.statusResolved,
-          ),
-        ],
-      UserRole.helpdesk => <Widget>[
-          KpiCard(
-            label: 'Ditugaskan ke Saya',
-            value: '${stats.total}',
-            icon: Icons.assignment_ind_outlined,
-            accent: primary,
-            onTap: () => context.push(AppRoutes.tickets),
-          ),
-          KpiCard(
-            label: 'Terbuka',
-            value: '${stats.open}',
-            icon: Icons.error_outline,
-            accent: AppColors.statusOpen,
-          ),
-          KpiCard(
-            label: 'Diproses',
-            value: '${stats.inProgress}',
-            icon: Icons.timelapse_outlined,
-            accent: AppColors.statusInProgress,
-          ),
-          KpiCard(
-            label: 'Rata-rata Resolusi',
-            value: _formatHours(stats.avgResolutionHours),
-            subtitle: 'dari tiket selesai',
-            icon: Icons.speed_outlined,
-            accent: AppColors.tertiary,
-          ),
-        ],
-      UserRole.admin => <Widget>[
-          KpiCard(
-            label: 'Total Tiket',
-            value: '${stats.total}',
-            icon: Icons.confirmation_number_outlined,
-            accent: primary,
-            onTap: () => context.push(AppRoutes.tickets),
-          ),
-          KpiCard(
-            label: 'Terbuka',
-            value: '${stats.open}',
-            icon: Icons.error_outline,
-            accent: AppColors.statusOpen,
-          ),
-          KpiCard(
-            label: 'Diproses',
-            value: '${stats.inProgress}',
-            icon: Icons.timelapse_outlined,
-            accent: AppColors.statusInProgress,
-          ),
-          KpiCard(
-            label: 'Rata-rata Resolusi',
-            value: _formatHours(stats.avgResolutionHours),
-            subtitle: 'dari tiket selesai',
-            icon: Icons.speed_outlined,
-            accent: AppColors.tertiary,
-          ),
-          KpiCard(
-            label: 'Total Pengguna',
-            value: '${stats.totalUsers}',
-            icon: Icons.people_outline,
-            accent: AppColors.secondary,
-          ),
-          KpiCard(
-            label: 'Total Helpdesk',
-            value: '${stats.totalHelpdesk}',
-            icon: Icons.support_agent_outlined,
-            accent: AppColors.statusResolved,
-          ),
-        ],
-    };
-
-    return _Grid(children: cards);
-  }
-
-  /// Pretty-print average resolution. Below 1 hour render minutes; an
-  /// empty dataset prints "—" so the card doesn't mislead with "0 jam".
-  static String _formatHours(double hours) {
-    if (hours <= 0) return '—';
-    if (hours < 1) return '${(hours * 60).round()} mnt';
-    if (hours < 10) return '${hours.toStringAsFixed(1)} jam';
-    return '${hours.round()} jam';
-  }
-}
-
-/// Two-column adaptive grid that lays out an arbitrary card list. We
-/// avoid `GridView` here because we're inside a parent `ListView` and
-/// don't want nested-scroll headaches.
-class _Grid extends StatelessWidget {
-  const _Grid({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> rows = <Widget>[];
-    for (int i = 0; i < children.length; i += 2) {
-      final Widget left = children[i];
-      final Widget? right =
-          i + 1 < children.length ? children[i + 1] : null;
-      rows.add(
-        Padding(
-          padding: EdgeInsets.only(bottom: i + 2 < children.length ? 12 : 0),
-          child: Row(
-            children: <Widget>[
-              Expanded(child: left),
-              const SizedBox(width: 12),
-              Expanded(child: right ?? const SizedBox.shrink()),
-            ],
-          ),
-        ),
-      );
-    }
-    return Column(children: rows);
   }
 }
 
@@ -444,23 +320,25 @@ class _DashboardError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(24),
-      children: <Widget>[
-        const SizedBox(height: 80),
-        const Icon(Icons.error_outline, size: 56),
-        const SizedBox(height: 12),
-        Text(message, textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        Center(
-          child: OutlinedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Coba lagi'),
+    return ResponsiveCenter(
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(24),
+        children: <Widget>[
+          const SizedBox(height: 80),
+          const Icon(Icons.error_outline, size: 56),
+          const SizedBox(height: 12),
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Coba lagi'),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

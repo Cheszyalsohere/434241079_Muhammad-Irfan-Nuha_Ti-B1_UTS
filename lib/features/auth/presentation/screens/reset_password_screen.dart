@@ -1,7 +1,8 @@
 /// Reset password screen (FR-004) — collects an email address and asks
 /// Supabase to send a password-reset link. After a successful request
-/// the screen swaps to a confirmation panel instructing the user to
-/// check their inbox.
+/// the screen swaps to a confirmation panel.
+///
+/// Minimal-clean styling consistent with login/register.
 library;
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
@@ -59,11 +61,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     });
 
     final bool loading = ref.watch(authControllerProvider).isLoading;
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final ThemeData theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reset Kata Sandi'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: loading ? null : () => context.pop(),
@@ -72,9 +73,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(maxWidth: 400),
               child: _sent
                   ? _SentPanel(
                       email: _emailCtrl.text.trim(),
@@ -85,30 +86,31 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: <Widget>[
-                          Icon(
-                            Icons.lock_reset,
-                            size: 64,
-                            color: scheme.primary,
-                          ),
-                          const SizedBox(height: 16),
+                          _IconTile(icon: Icons.lock_reset_outlined),
+                          const SizedBox(height: 22),
                           Text(
                             'Lupa kata sandi?',
-                            textAlign: TextAlign.center,
-                            style:
-                                Theme.of(context).textTheme.headlineSmall,
+                            style: AppTextStyles.displayLarge.copyWith(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 28,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Masukkan email akun Anda. Kami akan mengirim '
                             'tautan untuk mengatur ulang kata sandi.',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.55),
+                            ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 28),
+                          _FieldLabel(text: 'Email'),
+                          const SizedBox(height: 7),
                           CustomTextField(
-                            label: 'Email',
+                            label: 'nama@email.com',
                             controller: _emailCtrl,
-                            prefixIcon: Icons.email_outlined,
+                            prefixIcon: Icons.mail_outline,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.done,
                             validator: Validators.email,
@@ -132,6 +134,26 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   }
 }
 
+/// A small square tile holding an icon — echoes the brand-mark shape.
+class _IconTile extends StatelessWidget {
+  const _IconTile({required this.icon});
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Icon(icon, color: scheme.primary, size: 24),
+    );
+  }
+}
+
 class _SentPanel extends StatelessWidget {
   const _SentPanel({required this.email, required this.onBackToLogin});
 
@@ -140,28 +162,65 @@ class _SentPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final ThemeData theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        Icon(Icons.mark_email_read_outlined, size: 64, color: scheme.secondary),
-        const SizedBox(height: 16),
+        Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: AppColorsTint.success(context),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Icon(
+            Icons.mark_email_read_outlined,
+            color: theme.colorScheme.tertiary,
+            size: 24,
+          ),
+        ),
+        const SizedBox(height: 22),
         Text(
-          'Tautan Terkirim',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineSmall,
+          'Tautan terkirim.',
+          style: AppTextStyles.displayLarge.copyWith(
+            color: theme.colorScheme.onSurface,
+            fontSize: 28,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
           'Jika $email terdaftar, Anda akan menerima email berisi tautan '
           'untuk mengatur ulang kata sandi. Periksa folder spam jika tidak '
           'muncul dalam beberapa menit.',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 26),
         PrimaryButton(label: 'Kembali ke Login', onPressed: onBackToLogin),
       ],
+    );
+  }
+}
+
+/// Tint helper kept local to avoid leaking a one-off colour into the
+/// global palette.
+abstract final class AppColorsTint {
+  static Color success(BuildContext context) =>
+      Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.12);
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: AppTextStyles.eyebrow.copyWith(
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+      ),
     );
   }
 }

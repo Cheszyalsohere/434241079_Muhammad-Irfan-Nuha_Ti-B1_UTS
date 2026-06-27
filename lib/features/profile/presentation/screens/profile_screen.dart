@@ -39,7 +39,9 @@ import '../../../../core/config/app_constants.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/error_state.dart';
+import '../../../../core/widgets/responsive_center.dart';
 import '../../../../core/widgets/skeletons/profile_skeleton.dart';
 import '../../../../shared/widgets/app_menu_button.dart';
 import '../../../../shared/widgets/theme_toggle_button.dart';
@@ -329,7 +331,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           return RefreshIndicator(
             onRefresh: () =>
                 ref.read(profileControllerProvider.notifier).refresh(),
-            child: ListView(
+            child: ResponsiveCenter(
+              child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: <Widget>[
                 _Header(
@@ -426,6 +429,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               ],
+            ),
             ),
           );
         },
@@ -524,16 +528,15 @@ class _Header extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: scheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(7),
               ),
               child: Text(
-                roleLabel,
-                style: theme.textTheme.labelSmall?.copyWith(
+                roleLabel.toUpperCase(),
+                style: AppTextStyles.eyebrow.copyWith(
                   color: scheme.primary,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -786,8 +789,13 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+      padding: const EdgeInsets.fromLTRB(2, 8, 0, 10),
+      child: Text(
+        text.toUpperCase(),
+        style: AppTextStyles.eyebrow.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
+      ),
     );
   }
 }

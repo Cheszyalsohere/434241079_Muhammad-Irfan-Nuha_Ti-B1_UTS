@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
+import '../../../../core/widgets/responsive_center.dart';
 import '../../../../core/widgets/skeletons/notification_tile_skeleton.dart';
 import '../../../../shared/widgets/app_menu_button.dart';
 import '../../../../shared/widgets/theme_toggle_button.dart';
@@ -55,6 +56,7 @@ class NotificationScreen extends ConsumerWidget {
         child: RefreshIndicator(
           onRefresh: () =>
               ref.read(notificationsControllerProvider.notifier).refresh(),
+          child: ResponsiveCenter(
           child: async.when(
             loading: () => const NotificationListSkeleton(),
             error: (Object err, _) => ErrorState(
@@ -86,6 +88,7 @@ class NotificationScreen extends ConsumerWidget {
                     NotificationTile(notification: list[i]),
               );
             },
+          ),
           ),
         ),
       ),

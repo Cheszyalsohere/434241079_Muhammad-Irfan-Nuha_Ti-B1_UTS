@@ -1,9 +1,10 @@
-/// Themed `TextFormField` wrapper with label, prefix icon, validator
-/// hook, and obscure-text toggle for password fields.
+/// Themed `TextFormField` — sharp corners, clean borders.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../theme/app_text_styles.dart';
 
 class CustomTextField extends StatefulWidget {
   const CustomTextField({
@@ -56,6 +57,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+
     return TextFormField(
       controller: widget.controller,
       enabled: widget.enabled,
@@ -69,12 +72,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
       maxLines: _obscured ? 1 : widget.maxLines,
       maxLength: widget.maxLength,
       inputFormatters: widget.inputFormatters,
+      style: AppTextStyles.bodyLarge.copyWith(
+        color: scheme.onSurface,
+      ),
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
         prefixIcon: widget.prefixIcon == null
             ? null
-            : Icon(widget.prefixIcon, size: 20),
+            : Icon(
+                widget.prefixIcon,
+                size: 18,
+                color: scheme.onSurface.withValues(alpha: 0.45),
+              ),
         suffixIcon: widget.obscureText
             ? IconButton(
                 tooltip: _obscured ? 'Tampilkan' : 'Sembunyikan',
@@ -82,7 +92,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   _obscured
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
-                  size: 20,
+                  size: 18,
+                  color: scheme.onSurface.withValues(alpha: 0.45),
                 ),
                 onPressed: () => setState(() => _obscured = !_obscured),
               )

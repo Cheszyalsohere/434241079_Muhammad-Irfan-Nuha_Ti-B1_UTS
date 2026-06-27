@@ -2,9 +2,9 @@
 /// password, and confirmation. Role is forced to `user` server-side via
 /// the `handle_new_auth_user` trigger.
 ///
-/// On success the router redirects to `/dashboard` (Supabase signs the
-/// new user in immediately when email confirmation is disabled, which
-/// is the default in our project setup).
+/// Minimal-clean layout matching the login screen: brand mark, editorial
+/// heading, eyebrow field labels, generous whitespace. On success the
+/// router redirects to `/dashboard`.
 library;
 
 import 'package:flutter/material.dart';
@@ -12,7 +12,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/brand_mark.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../providers/auth_provider.dart';
@@ -59,7 +61,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ..showSnackBar(
           const SnackBar(content: Text('Akun berhasil dibuat. Selamat datang!')),
         );
-      // Router redirect handles navigation to /dashboard.
     }
   }
 
@@ -76,10 +77,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     final bool loading = ref.watch(authControllerProvider).isLoading;
+    final ThemeData theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Akun'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: loading ? null : () => context.pop(),
@@ -88,26 +89,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(maxWidth: 400),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
+                    const BrandMark(size: 38),
+                    const SizedBox(height: 24),
                     Text(
-                      'Buat akun pengguna baru',
-                      style: Theme.of(context).textTheme.titleMedium,
+                      'Buat akun.',
+                      style: AppTextStyles.displayLarge.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 30,
+                      ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
-                      'Akun pengguna hanya dapat membuat dan melacak tiket sendiri.',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      'Akun pengguna dapat membuat dan melacak tiket sendiri.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 28),
+
+                    _FieldLabel(text: 'Nama lengkap'),
+                    const SizedBox(height: 7),
                     CustomTextField(
-                      label: 'Nama lengkap',
+                      label: 'Nama Anda',
                       controller: _fullNameCtrl,
                       prefixIcon: Icons.badge_outlined,
                       textInputAction: TextInputAction.next,
@@ -115,8 +127,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       enabled: !loading,
                     ),
                     const SizedBox(height: 16),
+
+                    _FieldLabel(text: 'Username'),
+                    const SizedBox(height: 7),
                     CustomTextField(
-                      label: 'Username',
+                      label: 'username',
                       controller: _usernameCtrl,
                       prefixIcon: Icons.alternate_email,
                       textInputAction: TextInputAction.next,
@@ -124,18 +139,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       enabled: !loading,
                     ),
                     const SizedBox(height: 16),
+
+                    _FieldLabel(text: 'Email'),
+                    const SizedBox(height: 7),
                     CustomTextField(
-                      label: 'Email',
+                      label: 'nama@email.com',
                       controller: _emailCtrl,
-                      prefixIcon: Icons.email_outlined,
+                      prefixIcon: Icons.mail_outline,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       validator: Validators.email,
                       enabled: !loading,
                     ),
                     const SizedBox(height: 16),
+
+                    _FieldLabel(text: 'Kata sandi'),
+                    const SizedBox(height: 7),
                     CustomTextField(
-                      label: 'Kata sandi',
+                      label: '••••••••',
                       controller: _passwordCtrl,
                       prefixIcon: Icons.lock_outline,
                       obscureText: true,
@@ -144,8 +165,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       enabled: !loading,
                     ),
                     const SizedBox(height: 16),
+
+                    _FieldLabel(text: 'Konfirmasi kata sandi'),
+                    const SizedBox(height: 7),
                     CustomTextField(
-                      label: 'Konfirmasi kata sandi',
+                      label: '••••••••',
                       controller: _confirmCtrl,
                       prefixIcon: Icons.lock_person_outlined,
                       obscureText: true,
@@ -154,11 +178,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       onSubmitted: (_) => _submit(),
                       enabled: !loading,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 26),
                     PrimaryButton(
                       label: 'Daftar',
                       onPressed: loading ? null : _submit,
                       isLoading: loading,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          'Sudah punya akun?',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        TextButton(
+                          onPressed: loading ? null : () => context.pop(),
+                          child: const Text('Masuk'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -166,6 +204,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: AppTextStyles.eyebrow.copyWith(
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
       ),
     );
   }

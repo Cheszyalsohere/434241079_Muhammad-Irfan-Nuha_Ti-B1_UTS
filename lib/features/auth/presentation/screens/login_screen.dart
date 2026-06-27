@@ -1,9 +1,8 @@
-/// Login screen (FR-001) — email + password sign-in with form
-/// validation, loading state, inline error snackbar, and links to
-/// `/register` and `/reset-password`.
+/// Login screen (FR-001) — email + password sign-in.
 ///
-/// On successful login the router's `refreshListenable` reacts to the
-/// auth-state change and redirects to `/dashboard` automatically.
+/// Minimal-clean layout: a small geometric brand mark, a left-aligned
+/// editorial heading, generous whitespace, and a solid ink CTA. On
+/// success the router's `refreshListenable` redirects to `/dashboard`.
 library;
 
 import 'package:flutter/material.dart';
@@ -12,7 +11,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/brand_mark.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../providers/auth_provider.dart';
@@ -45,14 +46,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
     if (!mounted) return;
     if (ok) {
-      // Router redirect handles navigation; nothing to do here.
       ref.read(authControllerProvider.notifier).clear();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Surface failures via snackbar.
     ref.listen<AsyncValue<String?>>(authControllerProvider, (_, next) {
       if (next is AsyncError) {
         final Object err = next.error!;
@@ -64,46 +63,69 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     final bool loading = ref.watch(authControllerProvider).isLoading;
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final ThemeData theme = Theme.of(context);
 
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(maxWidth: 400),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Icon(Icons.support_agent, size: 64, color: scheme.primary),
-                    const SizedBox(height: 12),
-                    Text(
-                      'E-Ticketing Helpdesk',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall,
+                    // Brand mark + wordmark, left aligned.
+                    Row(
+                      children: <Widget>[
+                        const BrandMark(size: 38),
+                        const SizedBox(width: 11),
+                        Text(
+                          'Helpdesk',
+                          style: AppTextStyles.titleLarge.copyWith(
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 44),
+
+                    // Editorial heading.
                     Text(
-                      'Masuk untuk melanjutkan',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      'Masuk.',
+                      style: AppTextStyles.displayLarge.copyWith(
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Kelola dan lacak tiket dukungan Anda di satu tempat.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                      ),
+                    ),
+                    const SizedBox(height: 36),
+
+                    _FieldLabel(text: 'Email'),
+                    const SizedBox(height: 7),
                     CustomTextField(
-                      label: 'Email',
+                      label: 'nama@email.com',
                       controller: _emailCtrl,
-                      prefixIcon: Icons.email_outlined,
+                      prefixIcon: Icons.alternate_email,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       validator: Validators.email,
                       enabled: !loading,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 18),
+
+                    _FieldLabel(text: 'Kata sandi'),
+                    const SizedBox(height: 7),
                     CustomTextField(
-                      label: 'Kata sandi',
+                      label: '••••••••',
                       controller: _passwordCtrl,
                       prefixIcon: Icons.lock_outline,
                       obscureText: true,
@@ -121,17 +143,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: const Text('Lupa kata sandi?'),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
+
                     PrimaryButton(
                       label: 'Masuk',
                       onPressed: loading ? null : _submit,
                       isLoading: loading,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        const Text('Belum punya akun?'),
+                        Text(
+                          'Belum punya akun?',
+                          style: theme.textTheme.bodyMedium,
+                        ),
                         TextButton(
                           onPressed: loading
                               ? null
@@ -146,6 +173,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Small uppercase field label set in the mono "eyebrow" style.
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: AppTextStyles.eyebrow.copyWith(
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
       ),
     );
   }

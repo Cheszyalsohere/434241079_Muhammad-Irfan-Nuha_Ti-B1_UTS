@@ -31,38 +31,30 @@ class DashboardSkeleton extends StatelessWidget {
     return Shimmer.fromColors(
       baseColor: base,
       highlightColor: highlight,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-        children: <Widget>[
-          // Greeting placeholder.
-          bar(height: 80, radius: 20),
-          const SizedBox(height: 16),
-          // KPI grid (2×2).
-          Row(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
             children: <Widget>[
-              Expanded(child: bar(height: 110, radius: 20)),
-              const SizedBox(width: 12),
-              Expanded(child: bar(height: 110, radius: 20)),
+              // Greeting placeholder.
+              bar(height: 88, radius: 12),
+              const SizedBox(height: 16),
+              // Hero placeholder.
+              bar(height: 96, radius: 14),
+              const SizedBox(height: 11),
+              // Breakdown rows placeholder.
+              bar(height: 216, radius: 14),
+              const SizedBox(height: 16),
+              // Pie placeholder.
+              bar(height: 240, radius: 12),
+              const SizedBox(height: 16),
+              // Bar placeholder.
+              bar(height: 240, radius: 12),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: <Widget>[
-              Expanded(child: bar(height: 110, radius: 20)),
-              const SizedBox(width: 12),
-              Expanded(child: bar(height: 110, radius: 20)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Pie placeholder.
-          bar(height: 220, radius: 20),
-          const SizedBox(height: 16),
-          // Bar placeholder.
-          bar(height: 220, radius: 20),
-          const SizedBox(height: 16),
-          // Line placeholder.
-          bar(height: 220, radius: 20),
-        ],
+        ),
       ),
     );
   }

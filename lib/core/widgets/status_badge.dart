@@ -1,5 +1,8 @@
-/// Pill-shaped badge rendering ticket status or priority with color
-/// tokens from [AppColors] and Indonesian labels from [AppLabels].
+/// Compact badge rendering ticket status or priority.
+///
+/// Minimal-clean styling: a small coloured dot + label on a faint tinted
+/// fill with a 6px radius. Colour tokens from [AppColors], Indonesian
+/// labels from [AppLabels].
 library;
 
 import 'package:flutter/material.dart';
@@ -19,32 +22,55 @@ class StatusBadge extends StatelessWidget {
   final BadgeKind kind;
 
   Color _color() => switch (kind) {
-    BadgeKind.status => AppColors.statusColor(value),
-    BadgeKind.priority => AppColors.priorityColor(value),
-  };
+        BadgeKind.status => AppColors.statusColor(value),
+        BadgeKind.priority => AppColors.priorityColor(value),
+      };
 
   String _label() => switch (kind) {
-    BadgeKind.status => AppLabels.status[value] ?? value,
-    BadgeKind.priority => AppLabels.priority[value] ?? value,
-  };
+        BadgeKind.status => AppLabels.status[value] ?? value,
+        BadgeKind.priority => AppLabels.priority[value] ?? value,
+      };
 
   @override
   Widget build(BuildContext context) {
     final Color color = _color();
+    final bool dark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.fromLTRB(7, 4, 9, 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
+        color: color.withValues(alpha: dark ? 0.16 : 0.10),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
       ),
-      child: Text(
-        _label(),
-        style: AppTextStyles.labelSmall.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            _label(),
+            style: AppTextStyles.labelSmall.copyWith(
+              color: dark ? color : _darken(color),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  /// Slightly darken the token so label text stays legible on the faint
+  /// tinted fill in light mode.
+  static Color _darken(Color c) {
+    final HSLColor hsl = HSLColor.fromColor(c);
+    return hsl.withLightness((hsl.lightness - 0.12).clamp(0.0, 1.0)).toColor();
   }
 }
