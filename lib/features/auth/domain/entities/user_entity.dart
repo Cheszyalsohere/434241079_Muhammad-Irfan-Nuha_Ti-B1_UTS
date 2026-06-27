@@ -47,5 +47,10 @@ class UserEntity with _$UserEntity {
     required UserRole role,
     String? avatarUrl,
     required DateTime createdAt,
+
+    /// Whether the account is active. Deactivated accounts (set by an
+    /// admin) are blocked at login. Defaults to `true` so older code
+    /// paths and rows without the column read as active.
+    @Default(true) bool isActive,
   }) = _UserEntity;
 }

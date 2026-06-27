@@ -64,6 +64,16 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
       final UserEntity entity = await _entityFromSupabaseUser(user);
+      // Deactivated accounts (set by an admin) are not allowed in.
+      // Sign back out so no session lingers, then surface a clear error.
+      if (!entity.isActive) {
+        await _remote.signOut();
+        return const Left<Failure, UserEntity>(
+          AuthFailure(
+            'Akun Anda telah dinonaktifkan. Hubungi admin untuk mengaktifkan kembali.',
+          ),
+        );
+      }
       return Right<Failure, UserEntity>(entity);
     } catch (e) {
       return Left<Failure, UserEntity>(_mapException(e));

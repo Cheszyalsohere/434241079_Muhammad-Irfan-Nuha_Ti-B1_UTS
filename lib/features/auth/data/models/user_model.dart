@@ -28,6 +28,7 @@ class UserModel with _$UserModel {
     required String role,
     @JsonKey(name: 'avatar_url') String? avatarUrl,
     @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'is_active') @Default(true) bool isActive,
     String? email,
   }) = _UserModel;
 
@@ -45,5 +46,6 @@ class UserModel with _$UserModel {
         role: UserRole.fromString(role),
         avatarUrl: avatarUrl,
         createdAt: createdAt,
+        isActive: isActive,
       );
 }

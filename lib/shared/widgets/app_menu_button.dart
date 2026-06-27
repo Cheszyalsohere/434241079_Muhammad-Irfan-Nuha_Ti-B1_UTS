@@ -26,6 +26,8 @@ class AppMenuButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
+    final bool isAdmin =
+        ref.watch(currentUserProvider).valueOrNull?.role.isAdmin ?? false;
 
     return PopupMenuButton<_MenuAction>(
       tooltip: 'Menu',
@@ -34,6 +36,9 @@ class AppMenuButton extends ConsumerWidget {
         switch (action) {
           case _MenuAction.about:
             await showAboutAppDialog(context);
+          case _MenuAction.users:
+            if (!context.mounted) return;
+            await context.push(AppRoutes.users);
           case _MenuAction.settings:
             if (!context.mounted) return;
             await context.push(AppRoutes.settings);
@@ -51,6 +56,16 @@ class AppMenuButton extends ConsumerWidget {
             dense: true,
           ),
         ),
+        if (isAdmin)
+          const PopupMenuItem<_MenuAction>(
+            value: _MenuAction.users,
+            child: ListTile(
+              leading: Icon(Icons.manage_accounts_outlined),
+              title: Text('Kelola Pengguna'),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
+          ),
         const PopupMenuItem<_MenuAction>(
           value: _MenuAction.settings,
           child: ListTile(
@@ -115,4 +130,4 @@ Future<void> _confirmAndLogout(BuildContext context, WidgetRef ref) async {
   }
 }
 
-enum _MenuAction { about, settings, logout }
+enum _MenuAction { about, users, settings, logout }

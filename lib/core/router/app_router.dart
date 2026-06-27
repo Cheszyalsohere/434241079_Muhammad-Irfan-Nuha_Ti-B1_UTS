@@ -25,6 +25,7 @@ import '../../features/notification/presentation/screens/notification_screen.dar
 import '../../features/profile/presentation/screens/change_password_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/user_management/presentation/screens/user_management_screen.dart';
 import '../../features/ticket/presentation/screens/create_ticket_screen.dart';
 import '../../features/ticket/presentation/screens/ticket_detail_screen.dart';
 import '../../features/ticket/presentation/screens/ticket_list_screen.dart';
@@ -44,6 +45,7 @@ abstract final class AppRoutes {
   static const String profile = '/profile';
   static const String changePassword = '/profile/change-password';
   static const String settings = '/settings';
+  static const String users = '/users';
 
   static const Set<String> publicPaths = <String>{
     splash,
@@ -189,6 +191,11 @@ GoRouter buildRouter() {
         path: AppRoutes.settings,
         pageBuilder: (_, GoRouterState state) =>
             _fadePage(key: state.pageKey, child: const SettingsScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.users,
+        pageBuilder: (_, GoRouterState state) =>
+            _fadePage(key: state.pageKey, child: const UserManagementScreen()),
       ),
     ],
     errorBuilder: (BuildContext _, GoRouterState state) => Scaffold(
