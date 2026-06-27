@@ -54,6 +54,25 @@ abstract final class AppColors {
   static Color borderLight = const Color(0xFF18181B).withValues(alpha: 0.08);
   static Color borderDark = Colors.white.withValues(alpha: 0.09);
 
+  // ── Elevation: "subtle tactile" rest shadow ────────────────────────
+  /// A whisper of shadow under resting cards (per DESIGN.md elevation).
+  /// Light mode only — in dark mode depth comes from the border + tonal
+  /// step, so a shadow on near-black would be invisible noise.
+  static List<BoxShadow> restShadow(bool dark) => dark
+      ? const <BoxShadow>[]
+      : const <BoxShadow>[
+          BoxShadow(
+            color: Color(0x0A18181B), // ink @ ~0.04
+            blurRadius: 2,
+            offset: Offset(0, 1),
+          ),
+          BoxShadow(
+            color: Color(0x0D18181B), // ink @ ~0.05
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+        ];
+
   // ── Aliases so legacy "glass" call-sites keep compiling ────────────
   static Color get glassSurfaceLight => surfaceLight;
   static Color get glassSurfaceDark => surfaceDark;

@@ -51,6 +51,7 @@ class GlassContainer extends StatelessWidget {
           color: fill,
           borderRadius: BorderRadius.circular(borderRadius),
           border: Border.all(color: stroke, width: 1),
+          boxShadow: AppColors.restShadow(dark),
         ),
         child: child,
       ),
@@ -84,19 +85,26 @@ class GlassCard extends StatelessWidget {
 
     return Padding(
       padding: margin,
-      child: Material(
-        color: fill,
-        borderRadius: radius,
-        child: InkWell(
-          onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: fill,
           borderRadius: radius,
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              borderRadius: radius,
-              border: Border.all(color: stroke, width: 1),
+          boxShadow: AppColors.restShadow(dark),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: radius,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: radius,
+            child: Container(
+              padding: padding,
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                border: Border.all(color: stroke, width: 1),
+              ),
+              child: child,
             ),
-            child: child,
           ),
         ),
       ),

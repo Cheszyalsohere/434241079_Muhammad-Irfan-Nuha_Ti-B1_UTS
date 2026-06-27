@@ -293,19 +293,25 @@ class _UserRow extends StatelessWidget {
     final String initial =
         user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : '?';
 
-    return Material(
-      color: fill,
-      borderRadius: radius,
-      child: InkWell(
-        onTap: onManage,
+    return Container(
+      decoration: BoxDecoration(
+        color: fill,
         borderRadius: radius,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: radius,
-            border: Border.all(color: border),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
+        boxShadow: AppColors.restShadow(dark),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onManage,
+          borderRadius: radius,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              border: Border.all(color: border),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
             child: Row(
               children: <Widget>[
                 // Avatar.
@@ -412,6 +418,7 @@ class _UserRow extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),
@@ -569,12 +576,7 @@ class _ManageSheetState extends ConsumerState<_ManageSheet> {
             const SizedBox(height: 20),
 
             // ── Role section ──
-            Text(
-              'PERAN',
-              style: AppTextStyles.eyebrow.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
+            Text('Peran', style: theme.textTheme.titleMedium),
             const SizedBox(height: 10),
             if (widget.isSelf)
               _InfoNote(
@@ -599,12 +601,7 @@ class _ManageSheetState extends ConsumerState<_ManageSheet> {
             const SizedBox(height: 22),
 
             // ── Active section ──
-            Text(
-              'STATUS AKUN',
-              style: AppTextStyles.eyebrow.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
+            Text('Status akun', style: theme.textTheme.titleMedium),
             const SizedBox(height: 10),
             if (widget.isSelf)
               _InfoNote(

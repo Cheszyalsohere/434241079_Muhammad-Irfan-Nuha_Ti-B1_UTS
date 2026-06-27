@@ -87,7 +87,11 @@ class _Hero extends StatelessWidget {
 
     final Widget card = Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-      decoration: BoxDecoration(color: ink, borderRadius: radius),
+      decoration: BoxDecoration(
+        color: ink,
+        borderRadius: radius,
+        boxShadow: AppColors.restShadow(dark),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
@@ -267,6 +271,7 @@ class _BreakdownCard extends StatelessWidget {
         color: fill,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: border),
+        boxShadow: AppColors.restShadow(dark),
       ),
       child: Column(
         children: <Widget>[

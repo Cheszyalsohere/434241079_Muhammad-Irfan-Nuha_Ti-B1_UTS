@@ -228,37 +228,6 @@ class _Greeting extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          // Eyebrow + role chip on one line.
-          Row(
-            children: <Widget>[
-              Text(
-                'RINGKASAN',
-                style: AppTextStyles.eyebrow.copyWith(
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.10),
-                  ),
-                ),
-                child: Text(
-                  roleLabel,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
           Row(
             children: <Widget>[
               CircleAvatar(
@@ -300,6 +269,24 @@ class _Greeting extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.10),
+                  ),
+                ),
+                child: Text(
+                  roleLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
