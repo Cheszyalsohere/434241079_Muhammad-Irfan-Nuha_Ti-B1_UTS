@@ -77,6 +77,11 @@ abstract class TicketRepository {
     required String? assigneeId,
   });
 
+  /// Delete a ticket (BR-002.8). Permitted for the ticket's creator or
+  /// an admin; the DB `tickets_delete` RLS policy is the real gate.
+  /// Child rows (comments, status history, notifications) cascade.
+  Future<Either<Failure, Unit>> deleteTicket(String id);
+
   /// Post a comment on a ticket. Optional attachment upload works
   /// the same way as on `createTicket`.
   Future<Either<Failure, CommentEntity>> addComment({

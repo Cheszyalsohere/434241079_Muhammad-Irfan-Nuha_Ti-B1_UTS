@@ -14,6 +14,7 @@ import '../../domain/repositories/ticket_repository.dart';
 import '../../domain/usecases/add_comment_usecase.dart';
 import '../../domain/usecases/assign_ticket_usecase.dart';
 import '../../domain/usecases/create_ticket_usecase.dart';
+import '../../domain/usecases/delete_ticket_usecase.dart';
 import '../../domain/usecases/get_status_history_usecase.dart';
 import '../../domain/usecases/get_ticket_detail_usecase.dart';
 import '../../domain/usecases/get_tickets_usecase.dart';
@@ -60,6 +61,10 @@ UpdateTicketStatusUseCase updateTicketStatusUseCase(
 @riverpod
 AssignTicketUseCase assignTicketUseCase(AssignTicketUseCaseRef ref) =>
     AssignTicketUseCase(ref.watch(ticketRepositoryProvider));
+
+@riverpod
+DeleteTicketUseCase deleteTicketUseCase(DeleteTicketUseCaseRef ref) =>
+    DeleteTicketUseCase(ref.watch(ticketRepositoryProvider));
 
 @riverpod
 AddCommentUseCase addCommentUseCase(AddCommentUseCaseRef ref) =>

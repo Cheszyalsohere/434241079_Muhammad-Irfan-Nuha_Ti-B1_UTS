@@ -190,6 +190,16 @@ class TicketRepositoryImpl implements TicketRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> deleteTicket(String id) async {
+    try {
+      await _remote.deleteTicket(id);
+      return const Right<Failure, Unit>(unit);
+    } catch (e) {
+      return Left<Failure, Unit>(_mapException(e));
+    }
+  }
+
+  @override
   Future<Either<Failure, CommentEntity>> addComment({
     required String ticketId,
     required String message,

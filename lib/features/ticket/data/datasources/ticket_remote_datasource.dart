@@ -267,6 +267,36 @@ changed_by_profile:profiles!changed_by($_profileCols)
     }
   }
 
+  /// Delete a ticket. RLS (`tickets_delete`) gates this to the owner or
+  /// an admin. If RLS blocks the row, PostgREST deletes 0 rows without
+  /// erroring — so we `.select()` the deleted rows and treat an empty
+  /// result as a permission failure rather than a silent no-op.
+  Future<void> deleteTicket(String ticketId) async {
+    try {
+      final List<dynamic> deleted = await _client
+          .from(AppConstants.tblTickets)
+          .delete()
+          .eq('id', ticketId)
+          .select('id');
+      if (deleted.isEmpty) {
+        throw const ServerException(
+          'Anda tidak memiliki izin untuk menghapus tiket ini.',
+        );
+      }
+    } on sb.PostgrestException catch (e) {
+      if (e.code == '42501') {
+        throw const ServerException(
+          'Anda tidak memiliki izin untuk menghapus tiket ini.',
+        );
+      }
+      throw ServerException(e.message, cause: e);
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw ServerException('Gagal menghapus tiket.', cause: e);
+    }
+  }
+
   Future<CommentModel> addComment({
     required String ticketId,
     required String message,

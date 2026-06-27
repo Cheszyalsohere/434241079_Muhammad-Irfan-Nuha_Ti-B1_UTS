@@ -57,6 +57,12 @@ class TicketDetailScreen extends ConsumerWidget {
         ref.watch(ticketDetailControllerProvider(ticketId));
     final UserEntity? me = ref.watch(currentUserProvider).valueOrNull;
     final bool staff = me?.role.canManageAllTickets ?? false;
+    // Delete is allowed for an admin or the ticket's own creator
+    // (BR-002.8). Helpdesk staff close tickets, they don't delete them.
+    final TicketEntity? ticket = async.valueOrNull?.ticket;
+    final bool canDelete = ticket != null &&
+        ((me?.role.isAdmin ?? false) || ticket.createdBy == me?.id);
+    final bool showMenu = async.hasValue && (staff || canDelete);
 
     return Scaffold(
       appBar: AppBar(
@@ -80,26 +86,51 @@ class TicketDetailScreen extends ConsumerWidget {
           error: (_, __) => const Text('Detail Tiket'),
         ),
         actions: <Widget>[
-          if (staff && async.hasValue)
+          if (showMenu)
             PopupMenuButton<_StaffAction>(
               icon: const Icon(Icons.more_vert),
               onSelected: (_StaffAction a) =>
-                  _onStaffAction(context, ref, a, async.value!.ticket),
-              itemBuilder: (_) => const <PopupMenuEntry<_StaffAction>>[
-                PopupMenuItem<_StaffAction>(
-                  value: _StaffAction.changeStatus,
-                  child: ListTile(
-                    leading: Icon(Icons.sync),
-                    title: Text('Ubah Status'),
+                  _onStaffAction(context, ref, a, ticket!),
+              itemBuilder: (BuildContext ctx) => <PopupMenuEntry<_StaffAction>>[
+                if (staff) ...const <PopupMenuEntry<_StaffAction>>[
+                  PopupMenuItem<_StaffAction>(
+                    value: _StaffAction.changeStatus,
+                    child: ListTile(
+                      leading: Icon(Icons.sync),
+                      title: Text('Ubah Status'),
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                    ),
                   ),
-                ),
-                PopupMenuItem<_StaffAction>(
-                  value: _StaffAction.assign,
-                  child: ListTile(
-                    leading: Icon(Icons.person_add_alt),
-                    title: Text('Tugaskan'),
+                  PopupMenuItem<_StaffAction>(
+                    value: _StaffAction.assign,
+                    child: ListTile(
+                      leading: Icon(Icons.person_add_alt),
+                      title: Text('Tugaskan'),
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                    ),
                   ),
-                ),
+                ],
+                if (canDelete) ...<PopupMenuEntry<_StaffAction>>[
+                  if (staff) const PopupMenuDivider(),
+                  PopupMenuItem<_StaffAction>(
+                    value: _StaffAction.delete,
+                    child: ListTile(
+                      leading: Icon(Icons.delete_outline,
+                          color: Theme.of(ctx).colorScheme.error),
+                      title: Text(
+                        'Hapus Tiket',
+                        style: TextStyle(
+                          color: Theme.of(ctx).colorScheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                    ),
+                  ),
+                ],
               ],
             ),
         ],
@@ -190,11 +221,72 @@ class TicketDetailScreen extends ConsumerWidget {
             ref.invalidate(ticketListControllerProvider(s));
           }
         }
+      case _StaffAction.delete:
+        await _confirmAndDelete(context, ref, ticket);
+    }
+  }
+
+  Future<void> _confirmAndDelete(
+    BuildContext context,
+    WidgetRef ref,
+    TicketEntity ticket,
+  ) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: const Text('Hapus Tiket?'),
+        content: Text(
+          'Tiket ${ticket.ticketNumber} beserta seluruh komentar dan '
+          'riwayatnya akan dihapus permanen. Tindakan ini tidak dapat '
+          'dibatalkan.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    final ({bool ok, String? error}) r = await ref
+        .read(ticketDetailControllerProvider(ticket.id).notifier)
+        .delete();
+    if (!context.mounted) return;
+
+    if (r.ok) {
+      HapticFeedback.mediumImpact();
+      // The deleted ticket must disappear from every list scope.
+      for (final TicketScope s in TicketScope.values) {
+        ref.invalidate(ticketListControllerProvider(s));
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Tiket ${ticket.ticketNumber} dihapus.')),
+      );
+      // Leave the now-dead detail screen.
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.tickets);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(r.error ?? 'Gagal menghapus tiket.')),
+      );
     }
   }
 }
 
-enum _StaffAction { changeStatus, assign }
+enum _StaffAction { changeStatus, assign, delete }
 
 /// ──────────────────────────────────────────────────────────────────────
 /// Body: header + description + timeline + composer

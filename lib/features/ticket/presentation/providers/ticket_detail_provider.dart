@@ -111,6 +111,18 @@ class TicketDetailController extends _$TicketDetailController {
       },
     );
   }
+
+  /// Delete this ticket. Returns `(ok, error)` so the screen can show
+  /// the failure verbatim and, on success, navigate away — there's no
+  /// detail left to refresh.
+  Future<({bool ok, String? error})> delete() async {
+    final Either<Failure, Unit> res =
+        await ref.read(deleteTicketUseCaseProvider).call(ticketId);
+    return res.fold(
+      (Failure f) => (ok: false, error: f.message),
+      (_) => (ok: true, error: null),
+    );
+  }
 }
 
 /// Status-change timeline for a single ticket.
