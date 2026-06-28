@@ -29,6 +29,7 @@ import '../../features/user_management/presentation/screens/user_management_scre
 import '../../features/ticket/presentation/screens/create_ticket_screen.dart';
 import '../../features/ticket/presentation/screens/ticket_detail_screen.dart';
 import '../../features/ticket/presentation/screens/ticket_list_screen.dart';
+import '../../features/ticket/presentation/screens/tracking_screen.dart';
 
 /// Route names kept as constants to avoid magic strings.
 abstract final class AppRoutes {
@@ -40,6 +41,7 @@ abstract final class AppRoutes {
   static const String tickets = '/tickets';
   static const String ticketCreate = '/tickets/create';
   static const String ticketDetail = '/tickets/:id';
+  static const String ticketTracking = '/tickets/:id/tracking';
   static const String history = '/history';
   static const String notifications = '/notifications';
   static const String profile = '/profile';
@@ -160,6 +162,17 @@ GoRouter buildRouter() {
                 ticketId: state.pathParameters['id'] ?? '',
               ),
             ),
+            routes: <RouteBase>[
+              GoRoute(
+                path: 'tracking',
+                pageBuilder: (_, GoRouterState state) => _fadePage(
+                  key: state.pageKey,
+                  child: TrackingScreen(
+                    ticketId: state.pathParameters['id'] ?? '',
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

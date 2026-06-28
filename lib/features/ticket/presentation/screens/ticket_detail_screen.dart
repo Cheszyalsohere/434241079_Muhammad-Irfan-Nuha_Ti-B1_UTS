@@ -44,7 +44,6 @@ import '../providers/ticket_detail_provider.dart';
 import '../providers/ticket_list_provider.dart';
 import '../widgets/comment_bubble.dart';
 import '../widgets/image_picker_sheet.dart';
-import '../widgets/status_timeline.dart';
 
 class TicketDetailScreen extends ConsumerWidget {
   const TicketDetailScreen({required this.ticketId, super.key});
@@ -608,9 +607,9 @@ class _DescriptionCard extends StatelessWidget {
   }
 }
 
-/// Collapsible "Timeline Status" section. Open by default so the
-/// status journey is immediately visible, but folds up if the user
-/// just wants the activity feed.
+/// Entry point to the dedicated Tracking screen (SRS §5.8). Shows a
+/// compact summary (change count) and navigates to the full status
+/// journey + workflow stepper on tap.
 class _TimelineStatusSection extends StatelessWidget {
   const _TimelineStatusSection({
     required this.ticket,
@@ -626,26 +625,23 @@ class _TimelineStatusSection extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       clipBehavior: Clip.antiAlias,
-      child: ExpansionTile(
-        initiallyExpanded: true,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-        title: Text(
-          'Timeline Status',
-          style: theme.textTheme.titleSmall,
-        ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        leading: Icon(Icons.timeline, color: theme.colorScheme.primary),
+        title: Text('Tracking Status', style: theme.textTheme.titleSmall),
         subtitle: Text(
           history.isEmpty
-              ? 'Belum ada perubahan setelah dibuat'
-              : '${history.length} perubahan',
+              ? 'Lihat perjalanan status tiket'
+              : '${history.length} perubahan • lihat tracking lengkap',
           style: theme.textTheme.labelSmall?.copyWith(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
-        leading: Icon(Icons.timeline, color: theme.colorScheme.primary),
-        children: <Widget>[
-          StatusTimeline(ticket: ticket, history: history),
-        ],
+        trailing: Icon(
+          Icons.chevron_right,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+        ),
+        onTap: () => context.push('/tickets/${ticket.id}/tracking'),
       ),
     );
   }
