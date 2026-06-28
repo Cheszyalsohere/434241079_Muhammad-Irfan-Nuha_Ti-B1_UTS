@@ -30,6 +30,7 @@ import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/ticket_entity.dart';
 import '../../domain/repositories/ticket_repository.dart';
+import '../providers/ticket_detail_provider.dart';
 import '../providers/ticket_list_provider.dart';
 import '../widgets/ticket_card.dart';
 
@@ -151,6 +152,12 @@ class _ScopeTabState extends ConsumerState<_ScopeTab> {
   Widget build(BuildContext context) {
     final AsyncValue<TicketListState> async =
         ref.watch(ticketListControllerProvider(widget.scope));
+    // The per-helpdesk filter (FR-007.3) is an admin-only control on the
+    // "Semua" queue — helpdesk staff already have their own assigned tab.
+    final bool isAdmin =
+        ref.watch(currentUserProvider).valueOrNull?.role.isAdmin ?? false;
+    final bool showAssigneeFilter =
+        isAdmin && widget.scope == TicketScope.all;
 
     return Column(
       children: <Widget>[
@@ -172,6 +179,13 @@ class _ScopeTabState extends ConsumerState<_ScopeTab> {
                 .setStatusFilter(s);
           },
         ),
+        if (showAssigneeFilter)
+          _AssigneeFilterBar(
+            selected: async.valueOrNull?.assignedTo,
+            onChanged: (String? v) => ref
+                .read(ticketListControllerProvider(widget.scope).notifier)
+                .setAssigneeFilter(v),
+          ),
         Expanded(
           child: ResponsiveCenter(
           child: async.when(
@@ -361,6 +375,113 @@ class _StatusChip extends StatelessWidget {
       label: Text(label),
       selected: selected,
       onSelected: (_) => onTap(),
+    );
+  }
+}
+
+/// Admin-only per-helpdesk filter (FR-007.3). A single dropdown button
+/// over the "Semua" queue: all staff, unassigned only, or one specific
+/// helpdesk. Reads the cached [helpdeskStaffProvider].
+class _AssigneeFilterBar extends ConsumerWidget {
+  const _AssigneeFilterBar({required this.selected, required this.onChanged});
+
+  /// `null` = all; [kUnassignedTicketsFilter] = unassigned; else a
+  /// helpdesk profile id.
+  final String? selected;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ThemeData theme = Theme.of(context);
+    final List<UserEntity> staff =
+        ref.watch(helpdeskStaffProvider).valueOrNull ?? const <UserEntity>[];
+
+    String label;
+    IconData icon;
+    if (selected == null) {
+      label = 'Semua petugas';
+      icon = Icons.groups_outlined;
+    } else if (selected == kUnassignedTicketsFilter) {
+      label = 'Belum ditugaskan';
+      icon = Icons.person_off_outlined;
+    } else {
+      final List<UserEntity> match =
+          staff.where((UserEntity u) => u.id == selected).toList();
+      label = match.isNotEmpty ? match.first.fullName : 'Petugas';
+      icon = Icons.person_outline;
+    }
+    final bool active = selected != null;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+        child: PopupMenuButton<String?>(
+          tooltip: 'Filter petugas',
+          position: PopupMenuPosition.under,
+          onSelected: onChanged,
+          itemBuilder: (BuildContext _) => <PopupMenuEntry<String?>>[
+            CheckedPopupMenuItem<String?>(
+              value: null,
+              checked: selected == null,
+              child: const Text('Semua petugas'),
+            ),
+            CheckedPopupMenuItem<String?>(
+              value: kUnassignedTicketsFilter,
+              checked: selected == kUnassignedTicketsFilter,
+              child: const Text('Belum ditugaskan'),
+            ),
+            if (staff.isNotEmpty) const PopupMenuDivider(),
+            for (final UserEntity u in staff)
+              CheckedPopupMenuItem<String?>(
+                value: u.id,
+                checked: selected == u.id,
+                child: Text(u.fullName, overflow: TextOverflow.ellipsis),
+              ),
+          ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: active
+                  ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                  : theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: active
+                    ? theme.colorScheme.primary.withValues(alpha: 0.45)
+                    : theme.dividerColor,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(
+                  icon,
+                  size: 16,
+                  color: active
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: active
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_drop_down,
+                  size: 18,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

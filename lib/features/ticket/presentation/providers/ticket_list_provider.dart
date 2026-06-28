@@ -26,6 +26,11 @@ class TicketListState with _$TicketListState {
     required TicketScope scope,
     TicketStatus? status,
     @Default('') String search,
+
+    /// Admin per-helpdesk filter (FR-007.3). `null` = no filter;
+    /// [kUnassignedTicketsFilter] = unassigned only; any other value is
+    /// a helpdesk profile id.
+    String? assignedTo,
     @Default(<TicketEntity>[]) List<TicketEntity> tickets,
     @Default(0) int page,
     @Default(true) bool hasMore,
@@ -57,6 +62,7 @@ class TicketListController extends _$TicketListController {
               scope: s.scope,
               status: s.status,
               search: s.search.isEmpty ? null : s.search,
+              assignedTo: s.assignedTo,
             );
     return res.fold(
       (Failure f) => s.copyWith(error: f, hasMore: false),
@@ -94,6 +100,7 @@ class TicketListController extends _$TicketListController {
               scope: current.scope,
               status: current.status,
               search: current.search.isEmpty ? null : current.search,
+              assignedTo: current.assignedTo,
             );
     state = AsyncData<TicketListState>(
       res.fold(
@@ -130,6 +137,21 @@ class TicketListController extends _$TicketListController {
     if (current.search == query) return;
     state = AsyncData<TicketListState>(
       current.copyWith(search: query, tickets: const <TicketEntity>[]),
+    );
+    final TicketListState next =
+        await _fetchFirstPage(state.value ?? current);
+    state = AsyncData<TicketListState>(next);
+  }
+
+  /// Apply the admin per-helpdesk filter and re-fetch (FR-007.3).
+  /// `null` clears the filter; [kUnassignedTicketsFilter] shows only
+  /// unassigned tickets; any other value is a helpdesk profile id.
+  Future<void> setAssigneeFilter(String? assignedTo) async {
+    final TicketListState current = state.value ??
+        TicketListState(scope: initialScope);
+    if (current.assignedTo == assignedTo) return;
+    state = AsyncData<TicketListState>(
+      current.copyWith(assignedTo: assignedTo, tickets: const <TicketEntity>[]),
     );
     final TicketListState next =
         await _fetchFirstPage(state.value ?? current);

@@ -51,6 +51,7 @@ class TicketRepositoryImpl implements TicketRepository {
     TicketScope scope = TicketScope.all,
     TicketStatus? status,
     String? search,
+    String? assignedTo,
   }) async {
     try {
       final List<TicketEntity> list = (await _remote.listTickets(
@@ -59,6 +60,7 @@ class TicketRepositoryImpl implements TicketRepository {
         scope: scope,
         status: status,
         search: search,
+        assignedTo: assignedTo,
       ))
           .map((m) => m.toEntity())
           .toList(growable: false);

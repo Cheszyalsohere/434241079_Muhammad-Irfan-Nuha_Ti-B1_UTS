@@ -29,6 +29,12 @@ enum TicketScope {
   assignedToMe,
 }
 
+/// Sentinel value for [TicketRepository.getTickets]'s `assignedTo`
+/// argument meaning "only tickets with no assignee yet". A real profile
+/// id filters to that specific helpdesk; `null` applies no assignee
+/// filter at all. Used by the admin per-helpdesk filter (FR-007.3).
+const String kUnassignedTicketsFilter = '__unassigned__';
+
 abstract class TicketRepository {
   /// Paged ticket list (newest updates first) with optional status +
   /// full-text filters. [page] is 0-indexed.
@@ -38,6 +44,7 @@ abstract class TicketRepository {
     TicketScope scope = TicketScope.all,
     TicketStatus? status,
     String? search,
+    String? assignedTo,
   });
 
   /// Load one ticket by id (with creator/assignee profiles).

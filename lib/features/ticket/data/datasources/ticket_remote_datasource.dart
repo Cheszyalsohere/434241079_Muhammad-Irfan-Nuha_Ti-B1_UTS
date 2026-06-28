@@ -60,6 +60,7 @@ changed_by_profile:profiles!changed_by($_profileCols)
     TicketScope scope = TicketScope.all,
     TicketStatus? status,
     String? search,
+    String? assignedTo,
   }) async {
     try {
       final String? uid = _client.auth.currentUser?.id;
@@ -75,6 +76,14 @@ changed_by_profile:profiles!changed_by($_profileCols)
         query = query.eq('created_by', uid);
       } else if (scope == TicketScope.assignedToMe) {
         query = query.eq('assigned_to', uid);
+      }
+
+      // Per-helpdesk filter (FR-007.3). The unassigned sentinel maps to
+      // `assigned_to IS NULL`; any other non-null value is a profile id.
+      if (assignedTo == kUnassignedTicketsFilter) {
+        query = query.isFilter('assigned_to', null);
+      } else if (assignedTo != null) {
+        query = query.eq('assigned_to', assignedTo);
       }
 
       if (status != null) {

@@ -20,6 +20,7 @@ class GetTicketsUseCase {
     TicketScope scope = TicketScope.all,
     TicketStatus? status,
     String? search,
+    String? assignedTo,
   }) {
     return _repo.getTickets(
       page: page,
@@ -27,6 +28,7 @@ class GetTicketsUseCase {
       scope: scope,
       status: status,
       search: search,
+      assignedTo: assignedTo,
     );
   }
 }
