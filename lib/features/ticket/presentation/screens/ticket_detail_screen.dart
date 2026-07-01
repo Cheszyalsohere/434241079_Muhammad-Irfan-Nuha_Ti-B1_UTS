@@ -28,6 +28,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/validators.dart';
@@ -55,13 +56,26 @@ class TicketDetailScreen extends ConsumerWidget {
     final AsyncValue<TicketDetail> async =
         ref.watch(ticketDetailControllerProvider(ticketId));
     final UserEntity? me = ref.watch(currentUserProvider).valueOrNull;
-    final bool staff = me?.role.canManageAllTickets ?? false;
-    // Delete is allowed for an admin or the ticket's own creator
-    // (BR-002.8). Helpdesk staff close tickets, they don't delete them.
+    final bool isAdmin = me?.role.isAdmin ?? false;
     final TicketEntity? ticket = async.valueOrNull?.ticket;
-    final bool canDelete = ticket != null &&
-        ((me?.role.isAdmin ?? false) || ticket.createdBy == me?.id);
-    final bool showMenu = async.hasValue && (staff || canDelete);
+    final TicketStatus? status = ticket?.status;
+    final bool isAssignee = ticket?.assignedTo != null &&
+        ticket!.assignedTo == me?.id;
+
+    // Status is driven by workflow actions only (no manual editing):
+    //   • Admin "Terima"   : open → assigned
+    //   • Admin "Tugaskan" : assigned → in_progress (also sets assignee)
+    //   • Helpdesk "Selesai": in_progress → closed
+    final bool canAccept = isAdmin && status == TicketStatus.open;
+    final bool canAssign = isAdmin &&
+        (status == TicketStatus.assigned || status == TicketStatus.inProgress);
+    final bool canFinish =
+        (isAdmin || isAssignee) && status == TicketStatus.inProgress;
+    // Delete: admin or the ticket's own creator (BR-002.8).
+    final bool canDelete =
+        ticket != null && (isAdmin || ticket.createdBy == me?.id);
+    final bool showMenu = async.hasValue &&
+        (canAccept || canAssign || canFinish || canDelete);
 
     return Scaffold(
       appBar: AppBar(
@@ -91,28 +105,44 @@ class TicketDetailScreen extends ConsumerWidget {
               onSelected: (_StaffAction a) =>
                   _onStaffAction(context, ref, a, ticket!),
               itemBuilder: (BuildContext ctx) => <PopupMenuEntry<_StaffAction>>[
-                if (staff) ...const <PopupMenuEntry<_StaffAction>>[
-                  PopupMenuItem<_StaffAction>(
-                    value: _StaffAction.changeStatus,
+                if (canAccept)
+                  const PopupMenuItem<_StaffAction>(
+                    value: _StaffAction.accept,
                     child: ListTile(
-                      leading: Icon(Icons.sync),
-                      title: Text('Ubah Status'),
+                      leading: Icon(Icons.inbox_outlined),
+                      title: Text('Terima Tiket'),
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                     ),
                   ),
+                if (canAssign)
                   PopupMenuItem<_StaffAction>(
                     value: _StaffAction.assign,
                     child: ListTile(
-                      leading: Icon(Icons.person_add_alt),
-                      title: Text('Tugaskan'),
+                      leading: const Icon(Icons.person_add_alt),
+                      title: Text(
+                        status == TicketStatus.inProgress
+                            ? 'Tugaskan Ulang'
+                            : 'Tugaskan ke Helpdesk',
+                      ),
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                     ),
                   ),
-                ],
+                if (canFinish)
+                  PopupMenuItem<_StaffAction>(
+                    value: _StaffAction.finish,
+                    child: ListTile(
+                      leading: Icon(Icons.check_circle_outline,
+                          color: AppColors.statusClosed),
+                      title: const Text('Tandai Selesai'),
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                    ),
+                  ),
                 if (canDelete) ...<PopupMenuEntry<_StaffAction>>[
-                  if (staff) const PopupMenuDivider(),
+                  if (canAccept || canAssign || canFinish)
+                    const PopupMenuDivider(),
                   PopupMenuItem<_StaffAction>(
                     value: _StaffAction.delete,
                     child: ListTile(
@@ -160,33 +190,16 @@ class TicketDetailScreen extends ConsumerWidget {
     TicketEntity ticket,
   ) async {
     switch (action) {
-      case _StaffAction.changeStatus:
-        final TicketStatus? next = await showDialog<TicketStatus>(
-          context: context,
-          builder: (BuildContext ctx) => _StatusPickerDialog(
-            current: ticket.status,
-          ),
+      case _StaffAction.accept:
+        await _applyStatus(
+          context,
+          ref,
+          ticket,
+          TicketStatus.assigned,
+          'Tiket diterima — silakan tugaskan ke helpdesk.',
         );
-        if (next == null || next == ticket.status) return;
-        final bool ok = await ref
-            .read(ticketDetailControllerProvider(ticket.id).notifier)
-            .updateStatus(next);
-        if (context.mounted) {
-          if (ok) {
-            // Medium impact for state-changing actions visible to others.
-            HapticFeedback.mediumImpact();
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                ok ? 'Status diperbarui ke ${next.label}' : 'Gagal memperbarui status',
-              ),
-            ),
-          );
-          for (final TicketScope s in TicketScope.values) {
-            ref.invalidate(ticketListControllerProvider(s));
-          }
-        }
+      case _StaffAction.finish:
+        await _confirmFinish(context, ref, ticket);
       case _StaffAction.assign:
         final AsyncValue<List<UserEntity>> staffAsync =
             ref.read(helpdeskStaffProvider);
@@ -223,6 +236,66 @@ class TicketDetailScreen extends ConsumerWidget {
       case _StaffAction.delete:
         await _confirmAndDelete(context, ref, ticket);
     }
+  }
+
+  /// Apply a workflow status change, surface feedback, and refresh every
+  /// ticket-list scope so the new status shows across the app.
+  Future<void> _applyStatus(
+    BuildContext context,
+    WidgetRef ref,
+    TicketEntity ticket,
+    TicketStatus newStatus,
+    String successMsg,
+  ) async {
+    final bool ok = await ref
+        .read(ticketDetailControllerProvider(ticket.id).notifier)
+        .updateStatus(newStatus);
+    if (!context.mounted) return;
+    if (ok) {
+      HapticFeedback.mediumImpact();
+      for (final TicketScope s in TicketScope.values) {
+        ref.invalidate(ticketListControllerProvider(s));
+      }
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(ok ? successMsg : 'Gagal memperbarui status.')),
+    );
+  }
+
+  /// Confirm before closing a ticket via the helpdesk "Selesai" action.
+  Future<void> _confirmFinish(
+    BuildContext context,
+    WidgetRef ref,
+    TicketEntity ticket,
+  ) async {
+    final bool? ok = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: const Text('Tandai Selesai?'),
+        content: Text(
+          'Tiket ${ticket.ticketNumber} akan ditutup (status Ditutup). '
+          'Pastikan pekerjaan sudah benar-benar selesai.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Selesai'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    await _applyStatus(
+      context,
+      ref,
+      ticket,
+      TicketStatus.closed,
+      'Tiket ditandai selesai.',
+    );
   }
 
   Future<void> _confirmAndDelete(
@@ -285,7 +358,7 @@ class TicketDetailScreen extends ConsumerWidget {
   }
 }
 
-enum _StaffAction { changeStatus, assign, delete }
+enum _StaffAction { accept, assign, finish, delete }
 
 /// ──────────────────────────────────────────────────────────────────────
 /// Body: header + description + timeline + composer
@@ -859,36 +932,6 @@ class _AttachmentThumb extends StatelessWidget {
 /// ──────────────────────────────────────────────────────────────────────
 /// Staff dialogs
 /// ──────────────────────────────────────────────────────────────────────
-
-class _StatusPickerDialog extends StatelessWidget {
-  const _StatusPickerDialog({required this.current});
-  final TicketStatus current;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Ubah Status'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          for (final TicketStatus s in TicketStatus.values)
-            RadioListTile<TicketStatus>(
-              value: s,
-              groupValue: current,
-              title: Text(s.label),
-              onChanged: (TicketStatus? v) => Navigator.of(context).pop(v),
-            ),
-        ],
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Batal'),
-        ),
-      ],
-    );
-  }
-}
 
 /// Small value carrier for the assign dialog. `userId = null` means
 /// "unassign" — distinguishable from a dismissal (which returns null

@@ -37,8 +37,8 @@ abstract final class AppConstants {
   // ── Enumerated values (must match DB check constraints) ────────────
   static const List<String> ticketStatuses = <String>[
     'open',
+    'assigned',
     'in_progress',
-    'resolved',
     'closed',
   ];
   static const List<String> ticketPriorities = <String>[
@@ -66,8 +66,8 @@ abstract final class AppConstants {
 abstract final class AppLabels {
   static const Map<String, String> status = <String, String>{
     'open': 'Terbuka',
+    'assigned': 'Diterima',
     'in_progress': 'Diproses',
-    'resolved': 'Selesai',
     'closed': 'Ditutup',
   };
 

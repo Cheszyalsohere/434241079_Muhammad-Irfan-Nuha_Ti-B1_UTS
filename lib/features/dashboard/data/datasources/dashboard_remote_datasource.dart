@@ -122,7 +122,7 @@ class DashboardRemoteDataSource {
     int totalUsers = 0,
     int totalHelpdesk = 0,
   }) {
-    int open = 0, inProgress = 0, resolved = 0, closed = 0;
+    int open = 0, assigned = 0, inProgress = 0, closed = 0;
     final Map<String, int> byCategory = <String, int>{
       for (final String c in AppConstants.ticketCategories) c: 0,
     };
@@ -141,10 +141,10 @@ class DashboardRemoteDataSource {
     };
 
     // For avg-resolution: accumulate (updated_at - created_at) for every
-    // ticket whose status is terminal. We treat `updated_at` as a proxy
-    // for resolution time — the schema's `updated_at` trigger fires on
-    // any row mutation, so for a status flip into `resolved`/`closed`
-    // it's a reasonable approximation.
+    // closed (done) ticket. We treat `updated_at` as a proxy for
+    // resolution time — the schema's `updated_at` trigger fires on any
+    // row mutation, so for a status flip into `closed` it's a
+    // reasonable approximation.
     int resolutionSamples = 0;
     double resolutionHoursTotal = 0;
 
@@ -156,10 +156,10 @@ class DashboardRemoteDataSource {
       switch (TicketStatus.fromString(statusWire)) {
         case TicketStatus.open:
           open++;
+        case TicketStatus.assigned:
+          assigned++;
         case TicketStatus.inProgress:
           inProgress++;
-        case TicketStatus.resolved:
-          resolved++;
         case TicketStatus.closed:
           closed++;
       }
@@ -184,7 +184,7 @@ class DashboardRemoteDataSource {
         }
       }
 
-      if (statusWire == 'resolved' || statusWire == 'closed') {
+      if (statusWire == 'closed') {
         final DateTime? updatedAt =
             DateTime.tryParse((row['updated_at'] as String?) ?? '');
         if (createdAt != null && updatedAt != null) {
@@ -213,8 +213,8 @@ class DashboardRemoteDataSource {
     return DashboardStatsModel(
       total: rows.length,
       open: open,
+      assigned: assigned,
       inProgress: inProgress,
-      resolved: resolved,
       closed: closed,
       ticketsByCategory: byCategory,
       ticketsByPriority: byPriority,

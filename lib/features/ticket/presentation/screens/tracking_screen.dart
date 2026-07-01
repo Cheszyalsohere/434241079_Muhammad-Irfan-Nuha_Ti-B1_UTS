@@ -152,8 +152,8 @@ class _WorkflowStepper extends StatelessWidget {
 
   static const List<TicketStatus> _stages = <TicketStatus>[
     TicketStatus.open,
+    TicketStatus.assigned,
     TicketStatus.inProgress,
-    TicketStatus.resolved,
     TicketStatus.closed,
   ];
 

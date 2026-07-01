@@ -16,7 +16,7 @@ enum BadgeKind { status, priority }
 class StatusBadge extends StatelessWidget {
   const StatusBadge({required this.value, required this.kind, super.key});
 
-  /// Status: `open` | `in_progress` | `resolved` | `closed`.
+  /// Status: `open` | `assigned` | `in_progress` | `closed`.
   /// Priority: `low` | `medium` | `high` | `urgent`.
   final String value;
   final BadgeKind kind;

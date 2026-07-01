@@ -28,8 +28,8 @@ class DashboardStats with _$DashboardStats {
 
     /// Status breakdown — drives both the stat cards and the pie chart.
     required int open,
+    required int assigned,
     required int inProgress,
-    required int resolved,
     required int closed,
 
     /// `category-wire-string -> count`, e.g. `{'hardware': 4, ...}`.
@@ -58,8 +58,8 @@ class DashboardStats with _$DashboardStats {
   factory DashboardStats.empty() => DashboardStats(
         total: 0,
         open: 0,
+        assigned: 0,
         inProgress: 0,
-        resolved: 0,
         closed: 0,
         ticketsByCategory: const <String, int>{},
         ticketsByPriority: const <String, int>{},
@@ -71,8 +71,8 @@ class DashboardStats with _$DashboardStats {
   /// iterate the enum in order without a switch.
   Map<TicketStatus, int> get byStatus => <TicketStatus, int>{
         TicketStatus.open: open,
+        TicketStatus.assigned: assigned,
         TicketStatus.inProgress: inProgress,
-        TicketStatus.resolved: resolved,
         TicketStatus.closed: closed,
       };
 

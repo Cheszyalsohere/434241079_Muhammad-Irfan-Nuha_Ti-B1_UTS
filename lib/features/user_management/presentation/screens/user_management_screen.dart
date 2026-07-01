@@ -395,7 +395,7 @@ class _UserRow extends StatelessWidget {
                             width: 6,
                             height: 6,
                             decoration: BoxDecoration(
-                              color: AppColors.statusResolved,
+                              color: AppColors.tertiary,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -713,7 +713,7 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final Color color =
-        destructive ? theme.colorScheme.error : AppColors.statusResolved;
+        destructive ? theme.colorScheme.error : AppColors.tertiary;
 
     return SizedBox(
       width: double.infinity,

@@ -14,8 +14,8 @@ class DashboardStatsModel {
   const DashboardStatsModel({
     required this.total,
     required this.open,
+    required this.assigned,
     required this.inProgress,
-    required this.resolved,
     required this.closed,
     required this.ticketsByCategory,
     required this.ticketsByPriority,
@@ -27,8 +27,8 @@ class DashboardStatsModel {
 
   final int total;
   final int open;
+  final int assigned;
   final int inProgress;
-  final int resolved;
   final int closed;
   final Map<String, int> ticketsByCategory;
   final Map<String, int> ticketsByPriority;
@@ -40,8 +40,8 @@ class DashboardStatsModel {
   DashboardStats toEntity() => DashboardStats(
         total: total,
         open: open,
+        assigned: assigned,
         inProgress: inProgress,
-        resolved: resolved,
         closed: closed,
         ticketsByCategory: ticketsByCategory,
         ticketsByPriority: ticketsByPriority,

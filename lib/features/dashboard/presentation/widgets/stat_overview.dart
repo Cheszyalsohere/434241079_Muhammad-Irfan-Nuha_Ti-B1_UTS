@@ -226,16 +226,16 @@ class _BreakdownCard extends StatelessWidget {
         color: AppColors.statusOpen,
       ),
       _StatusRow(
+        label: 'Diterima',
+        count: stats.assigned,
+        fraction: stats.assigned / denom,
+        color: AppColors.statusAssigned,
+      ),
+      _StatusRow(
         label: 'Diproses',
         count: stats.inProgress,
         fraction: stats.inProgress / denom,
         color: AppColors.statusInProgress,
-      ),
-      _StatusRow(
-        label: 'Selesai',
-        count: stats.resolved,
-        fraction: stats.resolved / denom,
-        color: AppColors.statusResolved,
       ),
       _StatusRow(
         label: 'Ditutup',

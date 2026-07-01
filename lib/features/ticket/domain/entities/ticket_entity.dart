@@ -17,17 +17,22 @@ import '../../../auth/domain/entities/user_entity.dart';
 
 part 'ticket_entity.freezed.dart';
 
-/// Workflow status — the core of FR-006.
+/// Workflow status — the core of FR-006. Driven automatically by
+/// workflow actions (no manual status editing):
+///   open       → user creates the ticket
+///   assigned   → admin accepts ("Terima") the ticket
+///   inProgress → admin assigns it to a helpdesk
+///   closed     → helpdesk marks it done ("Selesai")
 enum TicketStatus {
   open,
+  assigned,
   inProgress,
-  resolved,
   closed;
 
   static TicketStatus fromString(String? value) {
     return switch (value) {
+      'assigned' => TicketStatus.assigned,
       'in_progress' => TicketStatus.inProgress,
-      'resolved' => TicketStatus.resolved,
       'closed' => TicketStatus.closed,
       _ => TicketStatus.open,
     };
@@ -35,8 +40,8 @@ enum TicketStatus {
 
   String get wire => switch (this) {
         TicketStatus.open => 'open',
+        TicketStatus.assigned => 'assigned',
         TicketStatus.inProgress => 'in_progress',
-        TicketStatus.resolved => 'resolved',
         TicketStatus.closed => 'closed',
       };
 
@@ -44,8 +49,7 @@ enum TicketStatus {
 
   bool get isOpen => this == TicketStatus.open;
   bool get isClosed => this == TicketStatus.closed;
-  bool get isTerminal =>
-      this == TicketStatus.resolved || this == TicketStatus.closed;
+  bool get isTerminal => this == TicketStatus.closed;
 }
 
 /// Priority — drives sort order and colored chips.

@@ -96,11 +96,11 @@ abstract final class AppColors {
   static const Color neutral800 = Color(0xFF1F2937);
   static const Color neutral900 = Color(0xFF111827);
 
-  // ── Status tokens ──────────────────────────────────────────────────
-  static const Color statusOpen = Color(0xFF2563EB);
-  static const Color statusInProgress = Color(0xFFD97706);
-  static const Color statusResolved = Color(0xFF059669);
-  static const Color statusClosed = Color(0xFF6B7280);
+  // ── Status tokens (workflow: open → assigned → in_progress → closed) ─
+  static const Color statusOpen = Color(0xFF2563EB); // blue
+  static const Color statusAssigned = Color(0xFF7C3AED); // violet
+  static const Color statusInProgress = Color(0xFFD97706); // amber
+  static const Color statusClosed = Color(0xFF059669); // green (done)
 
   // ── Priority tokens ────────────────────────────────────────────────
   static const Color priorityLow = Color(0xFF9CA3AF);
@@ -110,8 +110,8 @@ abstract final class AppColors {
 
   static Color statusColor(String status) => switch (status) {
         'open' => statusOpen,
+        'assigned' => statusAssigned,
         'in_progress' => statusInProgress,
-        'resolved' => statusResolved,
         'closed' => statusClosed,
         _ => neutral400,
       };

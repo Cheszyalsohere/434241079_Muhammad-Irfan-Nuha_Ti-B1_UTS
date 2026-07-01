@@ -257,9 +257,16 @@ changed_by_profile:profiles!changed_by($_profileCols)
     required String? assigneeId,
   }) async {
     try {
+      // Assigning a helpdesk automatically moves the ticket into
+      // `in_progress` (workflow: assigned → in_progress). Unassigning
+      // (null) only clears the assignee and leaves the status as-is.
+      final Map<String, dynamic> patch = <String, dynamic>{
+        'assigned_to': assigneeId,
+        if (assigneeId != null) 'status': TicketStatus.inProgress.wire,
+      };
       final Map<String, dynamic> row = await _client
           .from(AppConstants.tblTickets)
-          .update(<String, dynamic>{'assigned_to': assigneeId})
+          .update(patch)
           .eq('id', ticketId)
           .select(_ticketSelect)
           .single();
